@@ -1,0 +1,19 @@
+{
+  "name": "wj-cake-dessert",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Monorepo e-commerce W.J. Cake & Dessert",
+  "workspaces": [
+    "frontend",
+    "backend",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "node --watch backend/src/server.js",
+    "dev:web": "npm --prefix frontend run dev",
+    "dev:api": "node --watch backend/src/server.js",
+    "build": "echo build pipeline pending",
+    "lint": "echo lint pipeline pending",
+    "test": "node --test backend/tests/*.test.js"
+  }
+}
