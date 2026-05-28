@@ -14,8 +14,13 @@ export function buildOpenApiSpec() {
       {
         url: "http://localhost:4000",
         description: "Serveur local"
+      },
+      {
+        url: "https://wj-cake-dessert.onrender.com",
+        description: "Serveur de production"
       }
     ],
+    security: [{ BearerAuth: [] }],
     tags: [
       { name: "Systeme", description: "Routes techniques et documentation" },
       { name: "Authentification", description: "Inscription et connexion client" },
@@ -34,33 +39,23 @@ export function buildOpenApiSpec() {
         get: {
           tags: ["Systeme"],
           summary: "Verifier l'etat du service",
-          responses: {
-            "200": {
-              description: "Service disponible"
-            }
-          }
+          security: [],
+          responses: { "200": { description: "Service disponible" } }
         }
       },
       "/api/v1/auth/register": {
         post: {
           tags: ["Authentification"],
           summary: "Inscrire un client",
+          security: [],
           requestBody: {
             required: true,
-            content: {
-              "application/json": {
-                schema: schemaRef("InscriptionRequest")
-              }
-            }
+            content: { "application/json": { schema: schemaRef("InscriptionRequest") } }
           },
           responses: {
             "201": {
               description: "Compte cree",
-              content: {
-                "application/json": {
-                  schema: schemaRef("AuthResponse")
-                }
-              }
+              content: { "application/json": { schema: schemaRef("AuthResponse") } }
             }
           }
         }
@@ -69,22 +64,15 @@ export function buildOpenApiSpec() {
         post: {
           tags: ["Authentification"],
           summary: "Connecter un client",
+          security: [],
           requestBody: {
             required: true,
-            content: {
-              "application/json": {
-                schema: schemaRef("ConnexionRequest")
-              }
-            }
+            content: { "application/json": { schema: schemaRef("ConnexionRequest") } }
           },
           responses: {
             "200": {
               description: "Connexion reussie",
-              content: {
-                "application/json": {
-                  schema: schemaRef("AuthResponse")
-                }
-              }
+              content: { "application/json": { schema: schemaRef("AuthResponse") } }
             }
           }
         }
@@ -93,6 +81,7 @@ export function buildOpenApiSpec() {
         post: {
           tags: ["Authentification"],
           summary: "Demander une reinitialisation de mot de passe",
+          security: [],
           requestBody: {
             required: true,
             content: {
@@ -100,22 +89,19 @@ export function buildOpenApiSpec() {
                 schema: {
                   type: "object",
                   required: ["email"],
-                  properties: {
-                    email: { type: "string", example: "joelle@example.com" }
-                  }
+                  properties: { email: { type: "string", example: "joelle@example.com" } }
                 }
               }
             }
           },
-          responses: {
-            "200": { description: "Demande acceptee" }
-          }
+          responses: { "200": { description: "Demande acceptee" } }
         }
       },
       "/api/v1/auth/reset-password": {
         post: {
           tags: ["Authentification"],
           summary: "Reinitialiser le mot de passe avec un token",
+          security: [],
           requestBody: {
             required: true,
             content: {
@@ -131,18 +117,14 @@ export function buildOpenApiSpec() {
               }
             }
           },
-          responses: {
-            "200": { description: "Mot de passe reinitialise" }
-          }
+          responses: { "200": { description: "Mot de passe reinitialise" } }
         }
       },
       "/api/v1/me": {
         get: {
           tags: ["Authentification"],
           summary: "Consulter le profil du client connecte",
-          responses: {
-            "200": { description: "Profil client" }
-          }
+          responses: { "200": { description: "Profil client" } }
         },
         patch: {
           tags: ["Authentification"],
@@ -163,9 +145,7 @@ export function buildOpenApiSpec() {
               }
             }
           },
-          responses: {
-            "200": { description: "Profil mis a jour" }
-          }
+          responses: { "200": { description: "Profil mis a jour" } }
         }
       },
       "/api/v1/me/password": {
@@ -187,18 +167,14 @@ export function buildOpenApiSpec() {
               }
             }
           },
-          responses: {
-            "200": { description: "Mot de passe modifie" }
-          }
+          responses: { "200": { description: "Mot de passe modifie" } }
         }
       },
       "/api/v1/me/addresses": {
         get: {
           tags: ["Authentification"],
           summary: "Lister les adresses du client",
-          responses: {
-            "200": { description: "Liste des adresses" }
-          }
+          responses: { "200": { description: "Liste des adresses" } }
         },
         post: {
           tags: ["Authentification"],
@@ -221,83 +197,46 @@ export function buildOpenApiSpec() {
               }
             }
           },
-          responses: {
-            "201": { description: "Adresse ajoutee" }
-          }
+          responses: { "201": { description: "Adresse ajoutee" } }
         }
       },
       "/api/v1/me/addresses/{id}": {
         delete: {
           tags: ["Authentification"],
           summary: "Supprimer une adresse client",
-          parameters: [
-            {
-              name: "id",
-              in: "path",
-              required: true,
-              schema: { type: "string" }
-            }
-          ],
-          responses: {
-            "200": { description: "Adresse supprimee" }
-          }
+          parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+          responses: { "200": { description: "Adresse supprimee" } }
         }
       },
       "/api/v1/catalog/categories": {
         get: {
           tags: ["Catalogue"],
           summary: "Lister les categories",
-          responses: {
-            "200": {
-              description: "Liste des categories"
-            }
-          }
+          security: [],
+          responses: { "200": { description: "Liste des categories" } }
         }
       },
       "/api/v1/catalog/products": {
         get: {
           tags: ["Catalogue"],
           summary: "Lister les produits",
+          security: [],
           parameters: [
-            {
-              name: "category",
-              in: "query",
-              schema: { type: "string" },
-              description: "Slug de categorie"
-            },
-            {
-              name: "q",
-              in: "query",
-              schema: { type: "string" },
-              description: "Terme de recherche"
-            }
+            { name: "category", in: "query", schema: { type: "string" }, description: "Slug de categorie" },
+            { name: "q", in: "query", schema: { type: "string" }, description: "Terme de recherche" }
           ],
-          responses: {
-            "200": {
-              description: "Liste des produits"
-            }
-          }
+          responses: { "200": { description: "Liste des produits" } }
         }
       },
       "/api/v1/catalog/products/{slug}": {
         get: {
           tags: ["Catalogue"],
           summary: "Consulter un produit",
-          parameters: [
-            {
-              name: "slug",
-              in: "path",
-              required: true,
-              schema: { type: "string" }
-            }
-          ],
+          security: [],
+          parameters: [{ name: "slug", in: "path", required: true, schema: { type: "string" } }],
           responses: {
-            "200": {
-              description: "Produit trouve"
-            },
-            "404": {
-              description: "Produit introuvable"
-            }
+            "200": { description: "Produit trouve" },
+            "404": { description: "Produit introuvable" }
           }
         }
       },
@@ -307,20 +246,12 @@ export function buildOpenApiSpec() {
           summary: "Creer un panier",
           requestBody: {
             required: true,
-            content: {
-              "application/json": {
-                schema: schemaRef("PanierRequest")
-              }
-            }
+            content: { "application/json": { schema: schemaRef("PanierRequest") } }
           },
           responses: {
             "201": {
               description: "Panier cree",
-              content: {
-                "application/json": {
-                  schema: schemaRef("PanierResponse")
-                }
-              }
+              content: { "application/json": { schema: schemaRef("PanierResponse") } }
             }
           }
         }
@@ -329,30 +260,15 @@ export function buildOpenApiSpec() {
         patch: {
           tags: ["Panier"],
           summary: "Mettre a jour un panier",
-          parameters: [
-            {
-              name: "id",
-              in: "path",
-              required: true,
-              schema: { type: "string" }
-            }
-          ],
+          parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
           requestBody: {
             required: true,
-            content: {
-              "application/json": {
-                schema: schemaRef("PanierRequest")
-              }
-            }
+            content: { "application/json": { schema: schemaRef("PanierRequest") } }
           },
           responses: {
             "200": {
               description: "Panier mis a jour",
-              content: {
-                "application/json": {
-                  schema: schemaRef("PanierResponse")
-                }
-              }
+              content: { "application/json": { schema: schemaRef("PanierResponse") } }
             }
           }
         }
@@ -363,55 +279,32 @@ export function buildOpenApiSpec() {
           summary: "Creer une demande de devis",
           requestBody: {
             required: true,
-            content: {
-              "application/json": {
-                schema: schemaRef("DevisSurMesureRequest")
-              }
-            }
+            content: { "application/json": { schema: schemaRef("DevisSurMesureRequest") } }
           },
-          responses: {
-            "201": {
-              description: "Demande creee"
-            }
-          }
+          responses: { "201": { description: "Demande creee" } }
         }
       },
       "/api/v1/orders": {
         get: {
           tags: ["Commandes"],
           summary: "Lister les commandes",
-          responses: {
-            "200": { description: "Liste des commandes" }
-          }
+          responses: { "200": { description: "Liste des commandes" } }
         },
         post: {
           tags: ["Commandes"],
           summary: "Creer une commande a partir d'un panier",
           requestBody: {
             required: true,
-            content: {
-              "application/json": {
-                schema: schemaRef("CommandeRequest")
-              }
-            }
+            content: { "application/json": { schema: schemaRef("CommandeRequest") } }
           },
-          responses: {
-            "201": { description: "Commande creee" }
-          }
+          responses: { "201": { description: "Commande creee" } }
         }
       },
       "/api/v1/orders/{number}": {
         get: {
           tags: ["Commandes"],
           summary: "Consulter une commande",
-          parameters: [
-            {
-              name: "number",
-              in: "path",
-              required: true,
-              schema: { type: "string" }
-            }
-          ],
+          parameters: [{ name: "number", in: "path", required: true, schema: { type: "string" } }],
           responses: {
             "200": { description: "Commande trouvee" },
             "404": { description: "Commande introuvable" }
@@ -422,9 +315,7 @@ export function buildOpenApiSpec() {
         get: {
           tags: ["Paiements"],
           summary: "Lister les paiements simules",
-          responses: {
-            "200": { description: "Liste des paiements" }
-          }
+          responses: { "200": { description: "Liste des paiements" } }
         }
       },
       "/api/v1/payments/intent": {
@@ -433,76 +324,61 @@ export function buildOpenApiSpec() {
           summary: "Creer une intention de paiement",
           requestBody: {
             required: true,
-            content: {
-              "application/json": {
-                schema: schemaRef("PaiementIntentRequest")
-              }
-            }
+            content: { "application/json": { schema: schemaRef("PaiementIntentRequest") } }
           },
-          responses: {
-            "201": { description: "Intention de paiement creee" }
-          }
+          responses: { "201": { description: "Intention de paiement creee" } }
         }
       },
       "/api/v1/delivery/zones": {
         get: {
           tags: ["Livraison"],
           summary: "Lister les zones de livraison",
-          responses: {
-            "200": { description: "Liste des zones" }
-          }
+          security: [],
+          responses: { "200": { description: "Liste des zones" } }
         }
       },
       "/api/v1/delivery/slots": {
         get: {
           tags: ["Livraison"],
           summary: "Lister les creneaux de livraison",
+          security: [],
           parameters: [
-            {
-              name: "type",
-              in: "query",
-              schema: { type: "string" }
-            },
-            {
-              name: "date",
-              in: "query",
-              schema: { type: "string" }
-            }
+            { name: "type", in: "query", schema: { type: "string" } },
+            { name: "date", in: "query", schema: { type: "string" } }
           ],
-          responses: {
-            "200": { description: "Liste des creneaux" }
-          }
+          responses: { "200": { description: "Liste des creneaux" } }
         }
       },
       "/api/v1/admin/dashboard": {
         get: {
           tags: ["Admin"],
           summary: "Afficher un tableau de bord simplifie",
-          responses: {
-            "200": { description: "Tableau de bord" }
-          }
+          responses: { "200": { description: "Tableau de bord" } }
         }
       },
       "/api/v1/admin/notifications": {
         get: {
           tags: ["Notifications"],
           summary: "Lister les notifications generees",
-          responses: {
-            "200": { description: "Liste des notifications" }
-          }
+          responses: { "200": { description: "Liste des notifications" } }
         }
       },
       "/api/v1/admin/audit-logs": {
         get: {
           tags: ["Audit"],
           summary: "Lister le journal d'audit",
-          responses: {
-            "200": { description: "Journal d'audit" }
-          }
+          responses: { "200": { description: "Journal d'audit" } }
         }
       }
     },
     components: {
+      securitySchemes: {
+        BearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT"
+        }
+      },
       schemas: {
         InscriptionRequest: {
           type: "object",
@@ -560,19 +436,12 @@ export function buildOpenApiSpec() {
           type: "object",
           properties: {
             customerEmail: { type: "string", example: "sara@example.com" },
-            items: {
-              type: "array",
-              items: schemaRef("PanierLigneRequest")
-            }
+            items: { type: "array", items: schemaRef("PanierLigneRequest") }
           }
         },
         PanierResponse: {
           type: "object",
-          properties: {
-            item: {
-              type: "object"
-            }
-          }
+          properties: { item: { type: "object" } }
         },
         DevisSurMesureRequest: {
           type: "object",
@@ -584,11 +453,7 @@ export function buildOpenApiSpec() {
             eventDate: { type: "string", example: "2026-06-15" },
             servings: { type: "integer", example: 30 },
             style: { type: "string", example: "floral" },
-            flavors: {
-              type: "array",
-              items: { type: "string" },
-              example: ["Vanille", "Fruits rouges"]
-            },
+            flavors: { type: "array", items: { type: "string" }, example: ["Vanille", "Fruits rouges"] },
             messageOnCake: { type: "string", example: "Joyeux anniversaire" },
             notes: { type: "string", example: "Inspiration mariage chic blanc et or." }
           }
