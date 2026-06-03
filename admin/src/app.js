@@ -93,25 +93,33 @@ const kpiMedia = {
     image:
       "https://images.unsplash.com/photo-1464306076886-da185f6a9d05?auto=format&fit=crop&w=900&q=80",
     alt: "Pâtisseries haut de gamme dressées sur un comptoir",
-    mediaClass: "revenue"
+    mediaClass: "revenue",
+    iconEmoji: "💸",
+    fallbackEmoji: "💸"
   },
   orders: {
     image:
       "https://images.unsplash.com/photo-1519864600265-abb23847ef2c?auto=format&fit=crop&w=900&q=80",
     alt: "Assortiment de gâteaux et cupcakes prêts à partir",
-    mediaClass: "orders"
+    mediaClass: "orders",
+    iconEmoji: "🧁",
+    fallbackEmoji: "🧁"
   },
   customers: {
     image:
       "https://images.unsplash.com/photo-1486427944299-d1955d23e34d?auto=format&fit=crop&w=900&q=80",
     alt: "Clientèle réunie autour d'une table dessert",
-    mediaClass: "customers"
+    mediaClass: "customers",
+    iconEmoji: "🫶",
+    fallbackEmoji: "🫶"
   },
   products: {
     image:
       "https://images.unsplash.com/photo-1559622214-f8a9850965bb?auto=format&fit=crop&w=900&q=80",
     alt: "Vitrine de créations sucrées et entremets",
-    mediaClass: "products"
+    mediaClass: "products",
+    iconEmoji: "🍰",
+    fallbackEmoji: "🍰"
   }
 };
 
@@ -945,13 +953,23 @@ function renderKpiCard(item) {
         <div class="stat-card__content">
           <div class="stat-top">
             <span class="stat-label">${item.label}</span>
-            <span class="stat-icon ${item.iconClass}"></span>
+            <span class="stat-icon ${item.iconClass}">
+              <span class="stat-icon__emoji" aria-hidden="true">${item.iconEmoji || ""}</span>
+            </span>
           </div>
           <div class="stat-value">${item.value}</div>
           <div class="stat-badge ${item.badgeClass}">${item.note}</div>
         </div>
-        <figure class="stat-card__media stat-card__media--${item.mediaClass}">
-          <img src="${item.image}" alt="${item.alt}" loading="lazy" />
+        <figure
+          class="stat-card__media stat-card__media--${item.mediaClass}"
+          data-fallback="${item.fallbackEmoji || ""}"
+        >
+          <img
+            src="${item.image}"
+            alt="${item.alt}"
+            loading="lazy"
+            onerror="this.parentElement.classList.add('is-fallback'); this.remove();"
+          />
         </figure>
       </div>
     </article>

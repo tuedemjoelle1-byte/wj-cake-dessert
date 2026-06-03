@@ -1039,6 +1039,19 @@ body.is-auth-locked .admin-shell {
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
   justify-self: end;
   position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.stat-card__media::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 2.2rem;
+  z-index: 1;
+  opacity: 0;
 }
 
 .stat-card__media::after {
@@ -1046,6 +1059,7 @@ body.is-auth-locked .admin-shell {
   position: absolute;
   inset: 0;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(39, 24, 17, 0.18));
+  z-index: 2;
 }
 
 .stat-card__media img {
@@ -1053,6 +1067,19 @@ body.is-auth-locked .admin-shell {
   height: 100%;
   object-fit: cover;
   display: block;
+  position: relative;
+  z-index: 1;
+}
+
+.stat-card__media.is-fallback {
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.92), transparent 45%),
+    linear-gradient(145deg, #fff1f4, #ffe6d2);
+}
+
+.stat-card__media.is-fallback::before {
+  content: attr(data-fallback);
+  opacity: 1;
 }
 
 .stat-card__media--revenue {
@@ -1091,6 +1118,8 @@ body.is-auth-locked .admin-shell {
   border-radius: 14px;
   position: relative;
   flex: 0 0 auto;
+  display: grid;
+  place-items: center;
 }
 
 .stat-icon::before {
@@ -1111,6 +1140,13 @@ body.is-auth-locked .admin-shell {
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.92);
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.34);
+}
+
+.stat-icon__emoji {
+  position: relative;
+  z-index: 1;
+  font-size: 1.05rem;
+  line-height: 1;
 }
 
 .stat-icon.pink {
