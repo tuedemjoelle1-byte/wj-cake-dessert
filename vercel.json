@@ -4,6 +4,10 @@
       "entrypoint": "frontend",
       "routePrefix": "/"
     },
+    "admin": {
+      "entrypoint": "admin",
+      "routePrefix": "/admin"
+    },
     "backend": {
       "entrypoint": "backend",
       "routePrefix": "/_/backend"
