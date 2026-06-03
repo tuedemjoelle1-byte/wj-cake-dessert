@@ -9,7 +9,7 @@
       "routePrefix": "/admin"
     },
     "backend": {
-      "entrypoint": "backend",
+      "entrypoint": "backend/src/server.js",
       "routePrefix": "/_/backend"
     }
   }
