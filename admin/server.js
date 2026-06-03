@@ -77,7 +77,7 @@ createServer(async (req, res) => {
 });
 
 async function proxyRequest(req, res, url) {
-  const upstreamUrl = buildBackendUrl(url);
+  const upstreamUrl = buildBackendUrl(req, url);
   const body =
     req.method === "GET" || req.method === "HEAD" ? undefined : await readRequestBody(req);
   const headers = {};
@@ -130,10 +130,18 @@ async function proxyRequest(req, res, url) {
   });
 }
 
-function buildBackendUrl(url) {
-  const base = backendUrl.endsWith("/") ? backendUrl : `${backendUrl}/`;
+function buildBackendUrl(req, url) {
+  const base = resolveBackendBase(req);
   const relativePath = `${String(url.pathname || "/").replace(/^\/+/, "")}${url.search || ""}`;
   return new URL(relativePath, base);
+}
+
+function resolveBackendBase(req) {
+  if (process.env.VERCEL === "1" && req.headers.host) {
+    return `https://${req.headers.host}/_/backend/`;
+  }
+
+  return backendUrl.endsWith("/") ? backendUrl : `${backendUrl}/`;
 }
 
 async function readRequestBody(req) {
