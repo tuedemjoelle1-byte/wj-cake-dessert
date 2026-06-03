@@ -19,8 +19,9 @@ const mimeTypes = {
 
 createServer(async (req, res) => {
   const url = new URL(req.url || "/", `http://${req.headers.host}`);
+  const isLocalAdminPath = process.env.VERCEL !== "1" && url.pathname.startsWith("/admin");
 
-  if (url.pathname === "/client-theme.css") {
+  if (url.pathname === "/client-theme.css" || (isLocalAdminPath && url.pathname === "/admin/client-theme.css")) {
     res.writeHead(200, {
       "Content-Type": "text/css; charset=utf-8",
       "Cache-Control": "no-store"
@@ -51,7 +52,10 @@ createServer(async (req, res) => {
     return;
   }
 
-  const pathname = url.pathname === "/" ? "/index.html" : url.pathname;
+  const normalizedPathname = isLocalAdminPath
+    ? url.pathname.replace(/^\/admin(?=\/|$)/, "") || "/"
+    : url.pathname;
+  const pathname = normalizedPathname === "/" ? "/index.html" : normalizedPathname;
   const safePath = normalize(pathname)
     .replace(/^(\.\.[/\\])+/, "")
     .replace(/^[/\\]+/, "");

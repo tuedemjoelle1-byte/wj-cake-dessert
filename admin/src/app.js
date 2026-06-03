@@ -228,7 +228,6 @@ function renderOrders(orders) {
       </thead>
       <tbody>
         ${orders
-          .slice(0, 5)
           .map(
             (order) => `
               <tr>
@@ -283,7 +282,6 @@ function renderQuotes(items) {
       </thead>
       <tbody>
         ${items
-          .slice(0, 5)
           .map(
             (item) => `
               <tr>
@@ -339,7 +337,6 @@ function renderPayments(items) {
       </thead>
       <tbody>
         ${items
-          .slice(0, 5)
           .map(
             (item) => `
               <tr>
@@ -758,7 +755,7 @@ function formatDate(value) {
 }
 
 function deriveAnalytics(dashboard) {
-  const orders = dashboard?.dernieresCommandes || [];
+  const orders = dashboard?.analyticsCommandes || dashboard?.dernieresCommandes || [];
   const customerEmails = new Set();
   const productTotals = new Map();
   const salesByDay = new Map();

@@ -492,10 +492,11 @@ export const memoryRepository = {
   async getAdminDashboard() {
     const revenue = memoryDb.orders.reduce((sum, order) => sum + (order.totals?.total || 0), 0);
     const pendingQuotes = memoryDb.customCakeRequests.filter((request) => request.status === "en-attente").length;
-    const recentOrders = [...memoryDb.orders]
-      .sort((left, right) => new Date(right.createdAt || 0).getTime() - new Date(left.createdAt || 0).getTime())
-      .slice(0, 5)
-      .map(toDashboardRecentOrder);
+    const sortedOrders = [...memoryDb.orders].sort(
+      (left, right) => new Date(right.createdAt || 0).getTime() - new Date(left.createdAt || 0).getTime()
+    );
+    const analyticsOrders = sortedOrders.map(toDashboardRecentOrder);
+    const recentOrders = analyticsOrders.slice(0, 5);
 
     return clone({
       commandes: {
@@ -513,7 +514,8 @@ export const memoryRepository = {
       devis: {
         enAttente: pendingQuotes
       },
-      dernieresCommandes: recentOrders
+      dernieresCommandes: recentOrders,
+      analyticsCommandes: analyticsOrders
     });
   }
 };

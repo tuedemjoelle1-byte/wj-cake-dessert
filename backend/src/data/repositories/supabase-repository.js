@@ -895,6 +895,7 @@ export const supabaseRepository = {
       this.listCustomCakeRequests()
     ]);
     const revenue = orders.reduce((sum, order) => sum + (order.totals?.total || 0), 0);
+    const analyticsOrders = orders.map(toDashboardRecentOrder);
 
     return {
       commandes: {
@@ -912,7 +913,8 @@ export const supabaseRepository = {
       devis: {
         enAttente: quoteRequests.filter((request) => request.status === "en-attente").length
       },
-      dernieresCommandes: orders.slice(0, 5).map(toDashboardRecentOrder)
+      dernieresCommandes: analyticsOrders.slice(0, 5),
+      analyticsCommandes: analyticsOrders
     };
   }
 };
