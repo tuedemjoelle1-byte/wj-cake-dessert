@@ -113,9 +113,6 @@ async function proxyRequest(req, res, url) {
       (upstreamResponse) => {
         const responseHeaders = { ...upstreamResponse.headers };
 
-        delete responseHeaders["content-encoding"];
-        delete responseHeaders["transfer-encoding"];
-
         res.writeHead(upstreamResponse.statusCode || 502, responseHeaders);
         upstreamResponse.pipe(res);
         upstreamResponse.on("end", resolve);
