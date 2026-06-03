@@ -1,4 +1,5 @@
 import { createServer, request as httpRequest } from "node:http";
+import { request as httpsRequest } from "node:https";
 import { existsSync, readFileSync } from "node:fs";
 import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -89,7 +90,8 @@ async function proxyRequest(req, res, url) {
   }
 
   await new Promise((resolve, reject) => {
-    const proxy = httpRequest(
+    const requestImpl = upstreamUrl.protocol === "https:" ? httpsRequest : httpRequest;
+    const proxy = requestImpl(
       {
         protocol: upstreamUrl.protocol,
         hostname: upstreamUrl.hostname,
