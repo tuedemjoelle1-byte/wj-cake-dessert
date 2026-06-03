@@ -1,10 +1,10 @@
 {
-  "name": "@wj/frontend",
+  "name": "@wj/admin",
   "private": true,
   "version": "0.1.0",
   "scripts": {
     "dev": "node server.js",
     "start": "node server.js",
-    "build": "echo static frontend ready"
+    "build": "echo static admin frontend ready"
   }
 }

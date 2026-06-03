@@ -22,22 +22,26 @@ export async function createUser(input) {
   });
   const session = await repository.createSession(user.id);
 
-  await notify({
-    type: "inscription",
-    channel: "email",
-    recipient: user.email,
-    subject: "Bienvenue chez W.J. Cake & Dessert",
-    content: "Votre compte client a ete cree avec succes.",
-    metadata: { userId: user.id }
-  });
+  await safeSideEffect(() =>
+    notify({
+      type: "inscription",
+      channel: "email",
+      recipient: user.email,
+      subject: "Bienvenue chez W.J. Cake & Dessert",
+      content: "Votre compte client a ete cree avec succes.",
+      metadata: { userId: user.id }
+    })
+  );
 
-  await audit({
-    action: "auth.register",
-    actorType: "customer",
-    actorId: user.id,
-    targetType: "user",
-    targetId: user.id
-  });
+  await safeSideEffect(() =>
+    audit({
+      action: "auth.register",
+      actorType: "customer",
+      actorId: user.id,
+      targetType: "user",
+      targetId: user.id
+    })
+  );
 
   return {
     user: sanitizeUser(user),
@@ -58,13 +62,15 @@ export async function loginUser(input) {
 
   const session = await repository.createSession(user.id);
 
-  await audit({
-    action: "auth.login",
-    actorType: "customer",
-    actorId: user.id,
-    targetType: "session",
-    targetId: session.id || session.accessToken
-  });
+  await safeSideEffect(() =>
+    audit({
+      action: "auth.login",
+      actorType: "customer",
+      actorId: user.id,
+      targetType: "session",
+      targetId: session.id || session.accessToken
+    })
+  );
 
   return {
     user: sanitizeUser(user),
@@ -103,13 +109,15 @@ export async function updateCurrentUser(accessToken, patch) {
     }
   });
 
-  await audit({
-    action: "account.profile.update",
-    actorType: "customer",
-    actorId: user.id,
-    targetType: "user",
-    targetId: user.id
-  });
+  await safeSideEffect(() =>
+    audit({
+      action: "account.profile.update",
+      actorType: "customer",
+      actorId: user.id,
+      targetType: "user",
+      targetId: user.id
+    })
+  );
 
   return sanitizeUser(updated);
 }
@@ -127,13 +135,15 @@ export async function changeCurrentPassword(accessToken, input) {
   const passwordHash = await hashPassword(input.newPassword);
   await repository.updateUser(user.id, { passwordHash });
 
-  await audit({
-    action: "account.password.change",
-    actorType: "customer",
-    actorId: user.id,
-    targetType: "user",
-    targetId: user.id
-  });
+  await safeSideEffect(() =>
+    audit({
+      action: "account.password.change",
+      actorType: "customer",
+      actorId: user.id,
+      targetType: "user",
+      targetId: user.id
+    })
+  );
 
   return { message: "Mot de passe mis a jour." };
 }
@@ -157,22 +167,26 @@ export async function requestPasswordReset(email) {
     createdAt: new Date().toISOString()
   });
 
-  await notify({
-    type: "password-reset",
-    channel: "email",
-    recipient: user.email,
-    subject: "Reinitialisation de mot de passe",
-    content: `Token de reinitialisation: ${token}`,
-    metadata: { userId: user.id, expiresAt }
-  });
+  await safeSideEffect(() =>
+    notify({
+      type: "password-reset",
+      channel: "email",
+      recipient: user.email,
+      subject: "Reinitialisation de mot de passe",
+      content: `Token de reinitialisation: ${token}`,
+      metadata: { userId: user.id, expiresAt }
+    })
+  );
 
-  await audit({
-    action: "auth.password-reset.request",
-    actorType: "customer",
-    actorId: user.id,
-    targetType: "user",
-    targetId: user.id
-  });
+  await safeSideEffect(() =>
+    audit({
+      action: "auth.password-reset.request",
+      actorType: "customer",
+      actorId: user.id,
+      targetType: "user",
+      targetId: user.id
+    })
+  );
 
   return {
     message: "Si un compte existe avec cette adresse, un lien de reinitialisation sera envoye.",
@@ -193,13 +207,15 @@ export async function resetPassword(input) {
   await repository.updateUser(record.userId, { passwordHash });
   await repository.markPasswordResetTokenUsed(input.token);
 
-  await audit({
-    action: "auth.password-reset.confirm",
-    actorType: "customer",
-    actorId: record.userId,
-    targetType: "user",
-    targetId: record.userId
-  });
+  await safeSideEffect(() =>
+    audit({
+      action: "auth.password-reset.confirm",
+      actorType: "customer",
+      actorId: record.userId,
+      targetType: "user",
+      targetId: record.userId
+    })
+  );
 
   return { message: "Mot de passe reinitialise avec succes." };
 }
@@ -227,13 +243,15 @@ export async function addAddress(accessToken, input) {
 
   const updated = await repository.updateUser(user.id, { addresses: normalized });
 
-  await audit({
-    action: "account.address.create",
-    actorType: "customer",
-    actorId: user.id,
-    targetType: "address",
-    targetId: address.id
-  });
+  await safeSideEffect(() =>
+    audit({
+      action: "account.address.create",
+      actorType: "customer",
+      actorId: user.id,
+      targetType: "address",
+      targetId: address.id
+    })
+  );
 
   return updated.addresses;
 }
@@ -248,13 +266,15 @@ export async function deleteAddress(accessToken, addressId) {
 
   const updated = await repository.updateUser(user.id, { addresses: normalized });
 
-  await audit({
-    action: "account.address.delete",
-    actorType: "customer",
-    actorId: user.id,
-    targetType: "address",
-    targetId: addressId
-  });
+  await safeSideEffect(() =>
+    audit({
+      action: "account.address.delete",
+      actorType: "customer",
+      actorId: user.id,
+      targetType: "address",
+      targetId: addressId
+    })
+  );
 
   return updated.addresses;
 }
@@ -292,4 +312,12 @@ function sanitizeUser(user) {
       transactionalEmails: true
     }
   };
+}
+
+async function safeSideEffect(callback) {
+  try {
+    await callback();
+  } catch {
+    return null;
+  }
 }

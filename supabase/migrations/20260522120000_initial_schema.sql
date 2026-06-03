@@ -33,7 +33,7 @@ create table if not exists public.products (
   name text not null,
   description text not null,
   base_price integer not null,
-  currency text not null default 'DZD',
+  currency text not null default 'MAD',
   flavors text[] not null default '{}',
   servings integer[] not null default '{}',
   min_notice_hours integer not null default 24,
@@ -47,7 +47,7 @@ create table if not exists public.carts (
   subtotal integer not null,
   delivery_fee integer not null,
   total integer not null,
-  currency text not null default 'DZD',
+  currency text not null default 'MAD',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -76,7 +76,7 @@ create table if not exists public.custom_cake_requests (
   notes text not null default '',
   status text not null default 'en-attente',
   estimated_amount integer not null,
-  estimated_currency text not null default 'DZD',
+  estimated_currency text not null default 'MAD',
   estimated_disclaimer text not null,
   created_at timestamptz not null default now()
 );
@@ -113,7 +113,7 @@ create table if not exists public.payments (
   provider text not null,
   status text not null default 'en-attente',
   amount integer not null,
-  currency text not null default 'DZD',
+  currency text not null default 'MAD',
   redirect_url text not null,
   created_at timestamptz not null default now()
 );
@@ -123,7 +123,7 @@ create table if not exists public.delivery_zones (
   code text not null unique,
   name text not null,
   fee integer not null,
-  currency text not null default 'DZD',
+  currency text not null default 'MAD',
   active boolean not null default true
 );
 
@@ -168,8 +168,8 @@ on conflict (id) do nothing;
 
 insert into public.delivery_zones (id, code, name, fee, currency, active)
 values
-  ('zone_casa_centre', 'casa-centre', 'Casablanca Centre', 40, 'DZD', true),
-  ('zone_casa_ouest', 'casa-ouest', 'Casablanca Ouest', 60, 'DZD', true)
+  ('zone_casa_centre', 'casa-centre', 'Casablanca Centre', 40, 'MAD', true),
+  ('zone_casa_ouest', 'casa-ouest', 'Casablanca Ouest', 60, 'MAD', true)
 on conflict (id) do nothing;
 
 insert into public.delivery_slots (id, date, start_time, end_time, type, available)
@@ -189,7 +189,7 @@ values
     'Red Velvet Signature',
     'Layer cake moelleux au cacao doux avec creme onctueuse.',
     320,
-    'DZD',
+    'MAD',
     array['Vanille', 'Red Velvet', 'Chocolat'],
     array[6, 8, 12],
     48,
@@ -202,7 +202,7 @@ values
     'Bento Oreo Love',
     'Mini gateau cadeau au biscuit Oreo et creme legere.',
     120,
-    'DZD',
+    'MAD',
     array['Oreo', 'Vanille'],
     array[2, 4],
     24,
@@ -215,7 +215,7 @@ values
     'Cupcakes Party Box',
     'Boite de cupcakes assortis pour anniversaires et evenements.',
     180,
-    'DZD',
+    'MAD',
     array['Vanille', 'Chocolat', 'Caramel'],
     array[6, 12],
     24,

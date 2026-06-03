@@ -1,21 +1,32 @@
 import { env } from "../../config/env.js";
 import { createPublicId, timestamp } from "../../lib/ids.js";
+import { createSessionTokens, decodeSessionToken } from "../../lib/session-tokens.js";
 
 function buildUrl(path) {
   return `${env.supabaseUrl}${path}`;
 }
 
 async function supabaseRequest(path, options = {}) {
-  const response = await fetch(buildUrl(path), {
-    ...options,
-    headers: {
-      apikey: env.supabaseServiceRoleKey,
-      Authorization: `Bearer ${env.supabaseServiceRoleKey}`,
-      "Content-Type": "application/json",
-      Prefer: "return=representation",
-      ...(options.headers || {})
-    }
-  });
+  let response;
+
+  try {
+    response = await fetch(buildUrl(path), {
+      ...options,
+      headers: {
+        apikey: env.supabaseServiceRoleKey,
+        Authorization: `Bearer ${env.supabaseServiceRoleKey}`,
+        "Content-Type": "application/json",
+        Prefer: "return=representation",
+        ...(options.headers || {})
+      }
+    });
+  } catch (error) {
+    const networkError = new Error("fetch failed");
+    networkError.status = 503;
+    networkError.code = "SUPABASE_NETWORK_ERROR";
+    networkError.cause = error;
+    throw networkError;
+  }
 
   if (!response.ok) {
     const text = await response.text();
@@ -99,6 +110,134 @@ function toPublicPayment(row) {
   };
 }
 
+function toPublicCustomCakeRequest(row) {
+  return {
+    id: row.id,
+    customerName: row.customer_name,
+    email: row.email,
+    phone: row.phone,
+    eventDate: row.event_date,
+    servings: row.servings,
+    style: row.style,
+    flavors: row.flavors || [],
+    messageOnCake: row.message_on_cake,
+    notes: row.notes,
+    status: row.status,
+    estimatedPrice: {
+      amount: row.estimated_amount,
+      currency: row.estimated_currency,
+      disclaimer: row.estimated_disclaimer
+    },
+    createdAt: row.created_at
+  };
+}
+
+function toDashboardRecentOrder(order) {
+  return {
+    id: order.id,
+    number: order.number,
+    customerEmail: order.customerEmail,
+    customerName: order.customerName,
+    status: order.status,
+    paymentStatus: order.paymentStatus,
+    fulfillmentMode: order.fulfillmentMode,
+    total: order.totals?.total || 0,
+    currency: order.totals?.currency || "DZD",
+    createdAt: order.createdAt
+  };
+}
+
+function toAdminOrderItem(order) {
+  return {
+    id: order.id,
+    number: order.number,
+    status: order.status,
+    paymentStatus: order.paymentStatus,
+    fulfillmentMode: order.fulfillmentMode,
+    customer: {
+      name: order.customerName,
+      email: order.customerEmail
+    },
+    total: order.totals?.total || 0,
+    currency: order.totals?.currency || "DZD",
+    createdAt: order.createdAt
+  };
+}
+
+function toAdminOrderDetail(order) {
+  return {
+    id: order.id,
+    number: order.number,
+    status: order.status,
+    paymentStatus: order.paymentStatus,
+    fulfillmentMode: order.fulfillmentMode,
+    customer: {
+      name: order.customerName,
+      email: order.customerEmail
+    },
+    delivery: {
+      address: order.deliveryAddress,
+      slotId: order.slotId
+    },
+    items: order.items || [],
+    totals: order.totals || {
+      subtotal: 0,
+      deliveryFee: 0,
+      total: 0,
+      currency: "DZD"
+    },
+    createdAt: order.createdAt
+  };
+}
+
+function toAdminQuoteRequestItem(request) {
+  return {
+    id: request.id,
+    status: request.status,
+    customer: {
+      name: request.customerName,
+      email: request.email,
+      phone: request.phone
+    },
+    eventDate: request.eventDate,
+    servings: request.servings,
+    estimatedPrice: request.estimatedPrice,
+    createdAt: request.createdAt
+  };
+}
+
+function toAdminQuoteRequestDetail(request) {
+  return {
+    id: request.id,
+    status: request.status,
+    customer: {
+      name: request.customerName,
+      email: request.email,
+      phone: request.phone
+    },
+    eventDate: request.eventDate,
+    servings: request.servings,
+    style: request.style,
+    flavors: request.flavors || [],
+    messageOnCake: request.messageOnCake,
+    notes: request.notes,
+    estimatedPrice: request.estimatedPrice,
+    createdAt: request.createdAt
+  };
+}
+
+function toAdminPaymentItem(payment) {
+  return {
+    id: payment.id,
+    orderNumber: payment.orderNumber,
+    provider: payment.provider,
+    status: payment.status,
+    amount: payment.amount,
+    currency: payment.currency,
+    createdAt: payment.createdAt
+  };
+}
+
 function computeCartTotals(items) {
   const subtotal = items.reduce((sum, item) => sum + item.lineTotal, 0);
   const deliveryFee = subtotal >= 400 ? 0 : 40;
@@ -106,7 +245,7 @@ function computeCartTotals(items) {
     subtotal,
     deliveryFee,
     total: subtotal + deliveryFee,
-    currency: "MAD"
+    currency: "DZD"
   };
 }
 
@@ -184,44 +323,11 @@ export const supabaseRepository = {
   },
 
   async createSession(userId) {
-    const session = {
-      id: createPublicId("sess"),
-      access_token: `access_${userId}_${Date.now()}`,
-      refresh_token: `refresh_${userId}_${Date.now()}`,
-      user_id: userId,
-      created_at: timestamp()
-    };
-
-    const rows = await supabaseRequest("/rest/v1/app_sessions", {
-      method: "POST",
-      body: JSON.stringify([session])
-    });
-
-    return {
-      id: rows[0].id,
-      accessToken: rows[0].access_token,
-      refreshToken: rows[0].refresh_token,
-      userId: rows[0].user_id,
-      createdAt: rows[0].created_at
-    };
+    return createSessionTokens(userId);
   },
 
   async getSessionByAccessToken(accessToken) {
-    const rows = await supabaseRequest(
-      `/rest/v1/app_sessions?access_token=eq.${encode(accessToken)}&select=*`
-    );
-
-    if (!rows[0]) {
-      return null;
-    }
-
-    return {
-      id: rows[0].id,
-      accessToken: rows[0].access_token,
-      refreshToken: rows[0].refresh_token,
-      userId: rows[0].user_id,
-      createdAt: rows[0].created_at
-    };
+    return decodeSessionToken(accessToken);
   },
 
   async getUserById(userId) {
@@ -460,25 +566,12 @@ export const supabaseRepository = {
       ])
     });
 
-    return {
-      id: rows[0].id,
-      customerName: rows[0].customer_name,
-      email: rows[0].email,
-      phone: rows[0].phone,
-      eventDate: rows[0].event_date,
-      servings: rows[0].servings,
-      style: rows[0].style,
-      flavors: rows[0].flavors,
-      messageOnCake: rows[0].message_on_cake,
-      notes: rows[0].notes,
-      status: rows[0].status,
-      estimatedPrice: {
-        amount: rows[0].estimated_amount,
-        currency: rows[0].estimated_currency,
-        disclaimer: rows[0].estimated_disclaimer
-      },
-      createdAt: rows[0].created_at
-    };
+    return toPublicCustomCakeRequest(rows[0]);
+  },
+
+  async listCustomCakeRequests() {
+    const rows = await supabaseRequest("/rest/v1/custom_cake_requests?select=*&order=created_at.desc");
+    return rows.map(toPublicCustomCakeRequest);
   },
 
   async createNotification(payload) {
@@ -604,6 +697,141 @@ export const supabaseRepository = {
     return rows[0] ? toPublicOrder(rows[0]) : null;
   },
 
+  async listAdminOrders(filters = {}) {
+    const page = filters.page || 1;
+    const pageSize = filters.pageSize || 10;
+    let orders = await this.listOrders();
+
+    if (filters.status) {
+      orders = orders.filter((order) => order.status === filters.status);
+    }
+
+    if (filters.email) {
+      const emailTerm = filters.email.toLowerCase();
+      orders = orders.filter((order) => (order.customerEmail || "").toLowerCase().includes(emailTerm));
+    }
+
+    if (filters.fulfillmentMode) {
+      orders = orders.filter((order) => order.fulfillmentMode === filters.fulfillmentMode);
+    }
+
+    if (filters.date) {
+      orders = orders.filter((order) => String(order.createdAt || "").slice(0, 10) === filters.date);
+    }
+
+    const totalItems = orders.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+    const start = (page - 1) * pageSize;
+
+    return {
+      items: orders.slice(start, start + pageSize).map(toAdminOrderItem),
+      meta: {
+        page,
+        pageSize,
+        totalItems,
+        totalPages
+      }
+    };
+  },
+
+  async getAdminOrderByNumber(number) {
+    const order = await this.getOrderByNumber(number);
+    return order ? toAdminOrderDetail(order) : null;
+  },
+
+  async updateOrderStatus(number, status) {
+    const rows = await supabaseRequest(`/rest/v1/orders?number=eq.${encode(number)}`, {
+      method: "PATCH",
+      body: JSON.stringify({
+        status
+      })
+    });
+
+    return rows[0] ? toPublicOrder(rows[0]) : null;
+  },
+
+  async listAdminQuoteRequests(filters = {}) {
+    const page = filters.page || 1;
+    const pageSize = filters.pageSize || 10;
+    let requests = await this.listCustomCakeRequests();
+
+    if (filters.status) {
+      requests = requests.filter((request) => request.status === filters.status);
+    }
+
+    if (filters.email) {
+      const emailTerm = filters.email.toLowerCase();
+      requests = requests.filter((request) => (request.email || "").toLowerCase().includes(emailTerm));
+    }
+
+    if (filters.date) {
+      requests = requests.filter((request) => String(request.createdAt || "").slice(0, 10) === filters.date);
+    }
+
+    const totalItems = requests.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+    const start = (page - 1) * pageSize;
+
+    return {
+      items: requests.slice(start, start + pageSize).map(toAdminQuoteRequestItem),
+      meta: {
+        page,
+        pageSize,
+        totalItems,
+        totalPages
+      }
+    };
+  },
+
+  async getAdminQuoteRequestById(id) {
+    const rows = await supabaseRequest(`/rest/v1/custom_cake_requests?id=eq.${encode(id)}&select=*`);
+    return rows[0] ? toAdminQuoteRequestDetail(toPublicCustomCakeRequest(rows[0])) : null;
+  },
+
+  async updateQuoteRequestStatus(id, status) {
+    const rows = await supabaseRequest(`/rest/v1/custom_cake_requests?id=eq.${encode(id)}`, {
+      method: "PATCH",
+      body: JSON.stringify({
+        status
+      })
+    });
+
+    return rows[0] ? toPublicCustomCakeRequest(rows[0]) : null;
+  },
+
+  async listAdminPayments(filters = {}) {
+    const page = filters.page || 1;
+    const pageSize = filters.pageSize || 10;
+    let payments = await this.listPayments();
+
+    if (filters.status) {
+      payments = payments.filter((payment) => payment.status === filters.status);
+    }
+
+    if (filters.provider) {
+      const providerTerm = filters.provider.toLowerCase();
+      payments = payments.filter((payment) => (payment.provider || "").toLowerCase().includes(providerTerm));
+    }
+
+    if (filters.date) {
+      payments = payments.filter((payment) => String(payment.createdAt || "").slice(0, 10) === filters.date);
+    }
+
+    const totalItems = payments.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+    const start = (page - 1) * pageSize;
+
+    return {
+      items: payments.slice(start, start + pageSize).map(toAdminPaymentItem),
+      meta: {
+        page,
+        pageSize,
+        totalItems,
+        totalPages
+      }
+    };
+  },
+
   async createPayment(payload) {
     const rows = await supabaseRequest("/rest/v1/payments", {
       method: "POST",
@@ -661,7 +889,11 @@ export const supabaseRepository = {
   },
 
   async getAdminDashboard() {
-    const [orders, payments] = await Promise.all([this.listOrders(), this.listPayments()]);
+    const [orders, payments, quoteRequests] = await Promise.all([
+      this.listOrders(),
+      this.listPayments(),
+      this.listCustomCakeRequests()
+    ]);
     const revenue = orders.reduce((sum, order) => sum + (order.totals?.total || 0), 0);
 
     return {
@@ -675,8 +907,12 @@ export const supabaseRepository = {
       },
       chiffreAffaires: {
         total: revenue,
-        currency: "MAD"
-      }
+        currency: "DZD"
+      },
+      devis: {
+        enAttente: quoteRequests.filter((request) => request.status === "en-attente").length
+      },
+      dernieresCommandes: orders.slice(0, 5).map(toDashboardRecentOrder)
     };
   }
 };

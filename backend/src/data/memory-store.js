@@ -31,7 +31,7 @@ export const memoryDb = {
       name: "Red Velvet Signature",
       description: "Layer cake moelleux au cacao doux avec creme onctueuse.",
       basePrice: 320,
-      currency: "MAD",
+      currency: "DZD",
       flavors: ["Vanille", "Red Velvet", "Chocolat"],
       servings: [6, 8, 12],
       minNoticeHours: 48,
@@ -44,7 +44,7 @@ export const memoryDb = {
       name: "Bento Oreo Love",
       description: "Mini gateau cadeau au biscuit Oreo et creme legere.",
       basePrice: 120,
-      currency: "MAD",
+      currency: "DZD",
       flavors: ["Oreo", "Vanille"],
       servings: [2, 4],
       minNoticeHours: 24,
@@ -57,7 +57,7 @@ export const memoryDb = {
       name: "Cupcakes Party Box",
       description: "Boite de cupcakes assortis pour anniversaires et evenements.",
       basePrice: 180,
-      currency: "MAD",
+      currency: "DZD",
       flavors: ["Vanille", "Chocolat", "Caramel"],
       servings: [6, 12],
       minNoticeHours: 24,
@@ -78,7 +78,7 @@ export const memoryDb = {
       code: "casa-centre",
       name: "Casablanca Centre",
       fee: 40,
-      currency: "MAD",
+      currency: "DZD",
       active: true
     },
     {
@@ -86,7 +86,7 @@ export const memoryDb = {
       code: "casa-ouest",
       name: "Casablanca Ouest",
       fee: 60,
-      currency: "MAD",
+      currency: "DZD",
       active: true
     }
   ],

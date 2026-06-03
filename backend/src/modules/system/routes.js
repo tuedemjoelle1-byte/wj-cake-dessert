@@ -42,7 +42,18 @@ export function registerSystemRoutes(router) {
         commandes: ["/api/v1/orders", "/api/v1/orders/:number"],
         paiements: ["/api/v1/payments", "/api/v1/payments/intent"],
         livraison: ["/api/v1/delivery/zones", "/api/v1/delivery/slots"],
-        admin: ["/api/v1/admin/dashboard", "/api/v1/admin/notifications", "/api/v1/admin/audit-logs"],
+        admin: [
+          "/api/v1/admin/dashboard",
+          "/api/v1/admin/orders",
+          "/api/v1/admin/orders/:number",
+          "/api/v1/admin/orders/:number/status",
+          "/api/v1/admin/quote-requests",
+          "/api/v1/admin/quote-requests/:id",
+          "/api/v1/admin/quote-requests/:id/status",
+          "/api/v1/admin/payments",
+          "/api/v1/admin/notifications",
+          "/api/v1/admin/audit-logs"
+        ],
         swagger: ["/swagger", "/swagger.json"]
       }
     });

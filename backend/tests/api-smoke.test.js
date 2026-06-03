@@ -23,6 +23,24 @@ async function withServer(run) {
   }
 }
 
+async function loginAdmin(baseUrl) {
+  const response = await fetch(`${baseUrl}/api/v1/admin/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      email: "admin@wj.local",
+      password: "admin1234"
+    })
+  });
+  const body = await response.json();
+
+  assert.equal(response.status, 200);
+
+  return {
+    Authorization: `Bearer ${body.accessToken}`
+  };
+}
+
 test("GET /health renvoie l'etat du service", async () => {
   await withServer(async (baseUrl) => {
     const response = await fetch(`${baseUrl}/health`);
@@ -94,7 +112,7 @@ test("POST /api/v1/auth/register cree un compte", async () => {
 
     assert.equal(response.status, 201);
     assert.equal(body.user.email, "joelle@example.com");
-    assert.ok(body.tokens.accessToken.startsWith("access_"));
+    assert.ok(body.tokens.accessToken.startsWith("wj."));
   });
 });
 
@@ -290,7 +308,7 @@ test("POST /api/v1/auth/login connecte un compte existant", async () => {
 
     assert.equal(response.status, 200);
     assert.equal(body.user.email, "sara@example.com");
-    assert.ok(body.tokens.refreshToken.startsWith("refresh_"));
+    assert.ok(body.tokens.refreshToken.startsWith("wjr."));
   });
 });
 
@@ -395,7 +413,7 @@ test("GET /api/v1/delivery/zones renvoie les zones de livraison", async () => {
 
     assert.equal(response.status, 200);
     assert.ok(body.items.length >= 1);
-    assert.equal(body.items[0].currency, "MAD");
+    assert.equal(body.items[0].currency, "DZD");
   });
 });
 
@@ -465,23 +483,355 @@ test("POST /api/v1/payments/intent cree une intention de paiement", async () => 
 
     assert.equal(paymentResponse.status, 201);
     assert.equal(paymentBody.item.status, "en-attente");
-    assert.equal(paymentBody.item.currency, "MAD");
+    assert.equal(paymentBody.item.currency, "DZD");
   });
 });
 
 test("GET /api/v1/admin/dashboard renvoie un tableau de bord", async () => {
   await withServer(async (baseUrl) => {
-    const response = await fetch(`${baseUrl}/api/v1/admin/dashboard`);
+    const headers = await loginAdmin(baseUrl);
+
+    await fetch(`${baseUrl}/api/v1/custom-cakes/quote-requests`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        customerName: "Imane",
+        email: "imane@example.com",
+        phone: "+212600000000",
+        eventDate: "2026-06-15",
+        servings: 12,
+        flavors: ["Vanille"]
+      })
+    });
+
+    const cartResponse = await fetch(`${baseUrl}/api/v1/cart`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        customerEmail: "admin-dashboard@example.com",
+        items: [{ productSlug: "red-velvet-signature", quantity: 1 }]
+      })
+    });
+    const cartBody = await cartResponse.json();
+
+    const orderResponse = await fetch(`${baseUrl}/api/v1/orders`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        cartId: cartBody.item.id,
+        customerEmail: "admin-dashboard@example.com",
+        customerName: "Dashboard Admin",
+        fulfillmentMode: "delivery",
+        deliveryAddress: "Casablanca"
+      })
+    });
+    const orderBody = await orderResponse.json();
+
+    await fetch(`${baseUrl}/api/v1/payments/intent`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        orderNumber: orderBody.item.number,
+        provider: "demo-cmi",
+        returnUrl: "http://localhost:3000"
+      })
+    });
+
+    const response = await fetch(`${baseUrl}/api/v1/admin/dashboard`, { headers });
     const body = await response.json();
 
     assert.equal(response.status, 200);
-    assert.ok(body.item.commandes.total >= 0);
-    assert.ok(body.item.chiffreAffaires.currency === "MAD");
+    assert.equal(body.item.commandes.total, 1);
+    assert.equal(body.item.commandes.enAttente, 1);
+    assert.equal(body.item.paiements.total, 1);
+    assert.equal(body.item.paiements.enAttente, 1);
+    assert.equal(body.item.devis.enAttente, 1);
+    assert.equal(body.item.chiffreAffaires.total, 360);
+    assert.equal(body.item.chiffreAffaires.currency, "DZD");
+    assert.equal(body.item.dernieresCommandes.length, 1);
+    assert.equal(body.item.dernieresCommandes[0].number, orderBody.item.number);
+    assert.equal(body.item.dernieresCommandes[0].total, 360);
+  });
+});
+
+test("GET /api/v1/admin/orders renvoie une liste paginee filtrable", async () => {
+  await withServer(async (baseUrl) => {
+    const headers = await loginAdmin(baseUrl);
+
+    const firstCartResponse = await fetch(`${baseUrl}/api/v1/cart`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        customerEmail: "commande1@example.com",
+        items: [{ productSlug: "red-velvet-signature", quantity: 1 }]
+      })
+    });
+    const firstCartBody = await firstCartResponse.json();
+
+    await fetch(`${baseUrl}/api/v1/orders`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        cartId: firstCartBody.item.id,
+        customerEmail: "commande1@example.com",
+        customerName: "Client One",
+        fulfillmentMode: "delivery",
+        deliveryAddress: "Alger"
+      })
+    });
+
+    const secondCartResponse = await fetch(`${baseUrl}/api/v1/cart`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        customerEmail: "commande2@example.com",
+        items: [{ productSlug: "bento-oreo-love", quantity: 2 }]
+      })
+    });
+    const secondCartBody = await secondCartResponse.json();
+
+    await fetch(`${baseUrl}/api/v1/orders`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        cartId: secondCartBody.item.id,
+        customerEmail: "commande2@example.com",
+        customerName: "Client Two",
+        fulfillmentMode: "pickup"
+      })
+    });
+
+    const response = await fetch(
+      `${baseUrl}/api/v1/admin/orders?page=1&pageSize=1&email=commande2@example.com&fulfillmentMode=pickup`,
+      { headers }
+    );
+    const body = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(body.items.length, 1);
+    assert.equal(body.items[0].customer.email, "commande2@example.com");
+    assert.equal(body.items[0].fulfillmentMode, "pickup");
+    assert.equal(body.items[0].currency, "DZD");
+    assert.equal(body.meta.page, 1);
+    assert.equal(body.meta.pageSize, 1);
+    assert.equal(body.meta.totalItems, 1);
+  });
+});
+
+test("GET /api/v1/admin/orders/:number renvoie le detail complet d'une commande", async () => {
+  await withServer(async (baseUrl) => {
+    const headers = await loginAdmin(baseUrl);
+
+    const cartResponse = await fetch(`${baseUrl}/api/v1/cart`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        customerEmail: "detail@example.com",
+        items: [{ productSlug: "red-velvet-signature", quantity: 1 }]
+      })
+    });
+    const cartBody = await cartResponse.json();
+
+    const orderResponse = await fetch(`${baseUrl}/api/v1/orders`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        cartId: cartBody.item.id,
+        customerEmail: "detail@example.com",
+        customerName: "Client Detail",
+        fulfillmentMode: "delivery",
+        deliveryAddress: "Alger centre"
+      })
+    });
+    const orderBody = await orderResponse.json();
+
+    const response = await fetch(`${baseUrl}/api/v1/admin/orders/${orderBody.item.number}`, { headers });
+    const body = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(body.item.number, orderBody.item.number);
+    assert.equal(body.item.customer.email, "detail@example.com");
+    assert.equal(body.item.delivery.address, "Alger centre");
+    assert.equal(body.item.items.length, 1);
+    assert.equal(body.item.totals.currency, "DZD");
+  });
+});
+
+test("PATCH /api/v1/admin/orders/:number/status met a jour le statut et journalise l'action", async () => {
+  await withServer(async (baseUrl) => {
+    const headers = await loginAdmin(baseUrl);
+
+    const cartResponse = await fetch(`${baseUrl}/api/v1/cart`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        customerEmail: "status@example.com",
+        items: [{ productSlug: "red-velvet-signature", quantity: 1 }]
+      })
+    });
+    const cartBody = await cartResponse.json();
+
+    const orderResponse = await fetch(`${baseUrl}/api/v1/orders`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        cartId: cartBody.item.id,
+        customerEmail: "status@example.com",
+        customerName: "Client Status",
+        fulfillmentMode: "delivery",
+        deliveryAddress: "Alger"
+      })
+    });
+    const orderBody = await orderResponse.json();
+
+    const response = await fetch(`${baseUrl}/api/v1/admin/orders/${orderBody.item.number}/status`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        ...headers
+      },
+      body: JSON.stringify({
+        status: "confirmee"
+      })
+    });
+    const body = await response.json();
+
+    const auditResponse = await fetch(`${baseUrl}/api/v1/admin/audit-logs`, { headers });
+    const auditBody = await auditResponse.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(body.item.status, "confirmee");
+    assert.equal(auditResponse.status, 200);
+    assert.ok(auditBody.items.some((item) => item.action === "admin.order.status.update"));
+  });
+});
+
+test("GET /api/v1/admin/quote-requests et detail devis fonctionnent", async () => {
+  await withServer(async (baseUrl) => {
+    const headers = await loginAdmin(baseUrl);
+
+    const createResponse = await fetch(`${baseUrl}/api/v1/custom-cakes/quote-requests`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        customerName: "Nadia",
+        email: "nadia@example.com",
+        phone: "+213600000000",
+        eventDate: "2026-06-20",
+        servings: 20,
+        flavors: ["Vanille", "Chocolat"],
+        notes: "Theme floral"
+      })
+    });
+    const createBody = await createResponse.json();
+
+    const listResponse = await fetch(
+      `${baseUrl}/api/v1/admin/quote-requests?email=nadia@example.com&page=1&pageSize=5`,
+      { headers }
+    );
+    const listBody = await listResponse.json();
+
+    const detailResponse = await fetch(`${baseUrl}/api/v1/admin/quote-requests/${createBody.item.id}`, { headers });
+    const detailBody = await detailResponse.json();
+
+    assert.equal(listResponse.status, 200);
+    assert.equal(listBody.items.length, 1);
+    assert.equal(listBody.items[0].customer.email, "nadia@example.com");
+    assert.equal(detailResponse.status, 200);
+    assert.equal(detailBody.item.customer.name, "Nadia");
+    assert.equal(detailBody.item.estimatedPrice.currency, "DZD");
+  });
+});
+
+test("PATCH /api/v1/admin/quote-requests/:id/status met a jour le statut et journalise l'action", async () => {
+  await withServer(async (baseUrl) => {
+    const headers = await loginAdmin(baseUrl);
+
+    const createResponse = await fetch(`${baseUrl}/api/v1/custom-cakes/quote-requests`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        customerName: "Lina",
+        email: "lina@example.com",
+        phone: "+213700000000",
+        eventDate: "2026-06-22",
+        servings: 18,
+        flavors: ["Fraise"]
+      })
+    });
+    const createBody = await createResponse.json();
+
+    const updateResponse = await fetch(`${baseUrl}/api/v1/admin/quote-requests/${createBody.item.id}/status`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...headers },
+      body: JSON.stringify({
+        status: "valide"
+      })
+    });
+    const updateBody = await updateResponse.json();
+
+    const auditResponse = await fetch(`${baseUrl}/api/v1/admin/audit-logs`, { headers });
+    const auditBody = await auditResponse.json();
+
+    assert.equal(updateResponse.status, 200);
+    assert.equal(updateBody.item.status, "valide");
+    assert.ok(auditBody.items.some((item) => item.action === "admin.quote-request.status.update"));
+  });
+});
+
+test("GET /api/v1/admin/payments renvoie une liste paginee filtrable", async () => {
+  await withServer(async (baseUrl) => {
+    const headers = await loginAdmin(baseUrl);
+
+    const cartResponse = await fetch(`${baseUrl}/api/v1/cart`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        customerEmail: "payment-admin@example.com",
+        items: [{ productSlug: "bento-oreo-love", quantity: 2 }]
+      })
+    });
+    const cartBody = await cartResponse.json();
+
+    const orderResponse = await fetch(`${baseUrl}/api/v1/orders`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        cartId: cartBody.item.id,
+        customerEmail: "payment-admin@example.com"
+      })
+    });
+    const orderBody = await orderResponse.json();
+
+    await fetch(`${baseUrl}/api/v1/payments/intent`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        orderNumber: orderBody.item.number,
+        provider: "demo-cmi",
+        returnUrl: "http://localhost:3000"
+      })
+    });
+
+    const response = await fetch(
+      `${baseUrl}/api/v1/admin/payments?page=1&pageSize=5&provider=demo-cmi&status=en-attente`,
+      { headers }
+    );
+    const body = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(body.items.length, 1);
+    assert.equal(body.items[0].provider, "demo-cmi");
+    assert.equal(body.items[0].status, "en-attente");
+    assert.equal(body.items[0].currency, "DZD");
+    assert.equal(body.meta.totalItems, 1);
   });
 });
 
 test("GET /api/v1/admin/notifications et /audit-logs renvoie des journaux", async () => {
   await withServer(async (baseUrl) => {
+    const headers = await loginAdmin(baseUrl);
+
     await fetch(`${baseUrl}/api/v1/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -493,8 +843,8 @@ test("GET /api/v1/admin/notifications et /audit-logs renvoie des journaux", asyn
       })
     });
 
-    const notificationsResponse = await fetch(`${baseUrl}/api/v1/admin/notifications`);
-    const auditResponse = await fetch(`${baseUrl}/api/v1/admin/audit-logs`);
+    const notificationsResponse = await fetch(`${baseUrl}/api/v1/admin/notifications`, { headers });
+    const auditResponse = await fetch(`${baseUrl}/api/v1/admin/audit-logs`, { headers });
     const notificationsBody = await notificationsResponse.json();
     const auditBody = await auditResponse.json();
 

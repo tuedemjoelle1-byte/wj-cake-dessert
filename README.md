@@ -41,6 +41,7 @@ Le MVP couvre :
 - découpe MVP backend
 - brouillon de contrat API
 - backend MVP fonctionnel dans `backend`
+- premiere base front-office fonctionnelle dans `frontend`
 
 ## Backend disponible
 
@@ -67,6 +68,7 @@ Depuis la racine du projet :
 
 ```bash
 npm run dev:api
+npm run dev:web
 ```
 
 ## Lancement du projet

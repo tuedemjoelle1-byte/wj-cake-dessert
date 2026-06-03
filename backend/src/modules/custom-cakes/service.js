@@ -24,7 +24,7 @@ function estimatePrice(input) {
   const flavorExtra = Array.isArray(input.flavors) ? input.flavors.length * 10 : 0;
   return {
     amount: base + flavorExtra,
-    currency: "MAD",
+    currency: "DZD",
     disclaimer: "Estimation indicative avant validation finale par la patissiere."
   };
 }

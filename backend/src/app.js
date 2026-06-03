@@ -9,6 +9,7 @@ import { registerOrderRoutes } from "./modules/orders/routes.js";
 import { registerPaymentRoutes } from "./modules/payments/routes.js";
 import { registerDeliveryRoutes } from "./modules/delivery/routes.js";
 import { registerAdminRoutes } from "./modules/admin/routes.js";
+import { registerAdminAuthRoutes } from "./modules/admin/auth-routes.js";
 import { registerNotificationRoutes } from "./modules/notifications/routes.js";
 
 export function createApp() {
@@ -23,6 +24,7 @@ export function createApp() {
   registerOrderRoutes(router);
   registerPaymentRoutes(router);
   registerDeliveryRoutes(router);
+  registerAdminAuthRoutes(router);
   registerAdminRoutes(router);
   registerNotificationRoutes(router);
 

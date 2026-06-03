@@ -1,5 +1,6 @@
 import { createPublicId, timestamp } from "../../lib/ids.js";
 import { memoryDb } from "../memory-store.js";
+import { createSessionTokens, decodeSessionToken } from "../../lib/session-tokens.js";
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -12,7 +13,7 @@ function computeCartTotals(items) {
     subtotal,
     deliveryFee,
     total: subtotal + deliveryFee,
-    currency: "MAD"
+    currency: "DZD"
   };
 }
 
@@ -24,6 +25,112 @@ function normalizeCartItem(product, quantity) {
     quantity,
     unitPrice: product.basePrice,
     lineTotal: product.basePrice * quantity
+  };
+}
+
+function toDashboardRecentOrder(order) {
+  return {
+    id: order.id,
+    number: order.number,
+    customerEmail: order.customerEmail,
+    customerName: order.customerName,
+    status: order.status,
+    paymentStatus: order.paymentStatus,
+    fulfillmentMode: order.fulfillmentMode,
+    total: order.totals?.total || 0,
+    currency: order.totals?.currency || "DZD",
+    createdAt: order.createdAt
+  };
+}
+
+function toAdminOrderItem(order) {
+  return {
+    id: order.id,
+    number: order.number,
+    status: order.status,
+    paymentStatus: order.paymentStatus,
+    fulfillmentMode: order.fulfillmentMode,
+    customer: {
+      name: order.customerName,
+      email: order.customerEmail
+    },
+    total: order.totals?.total || 0,
+    currency: order.totals?.currency || "DZD",
+    createdAt: order.createdAt
+  };
+}
+
+function toAdminOrderDetail(order) {
+  return {
+    id: order.id,
+    number: order.number,
+    status: order.status,
+    paymentStatus: order.paymentStatus,
+    fulfillmentMode: order.fulfillmentMode,
+    customer: {
+      name: order.customerName,
+      email: order.customerEmail
+    },
+    delivery: {
+      address: order.deliveryAddress,
+      slotId: order.slotId
+    },
+    items: order.items || [],
+    totals: order.totals || {
+      subtotal: 0,
+      deliveryFee: 0,
+      total: 0,
+      currency: "DZD"
+    },
+    createdAt: order.createdAt
+  };
+}
+
+function toAdminQuoteRequestItem(request) {
+  return {
+    id: request.id,
+    status: request.status,
+    customer: {
+      name: request.customerName,
+      email: request.email,
+      phone: request.phone
+    },
+    eventDate: request.eventDate,
+    servings: request.servings,
+    estimatedPrice: request.estimatedPrice,
+    createdAt: request.createdAt
+  };
+}
+
+function toAdminQuoteRequestDetail(request) {
+  return {
+    id: request.id,
+    status: request.status,
+    customer: {
+      name: request.customerName,
+      email: request.email,
+      phone: request.phone
+    },
+    eventDate: request.eventDate,
+    servings: request.servings,
+    style: request.style,
+    flavors: request.flavors || [],
+    messageOnCake: request.messageOnCake,
+    notes: request.notes,
+    estimatedPrice: request.estimatedPrice,
+    createdAt: request.createdAt
+  };
+}
+
+function toAdminPaymentItem(payment) {
+  return {
+    id: payment.id,
+    orderNumber: payment.orderNumber,
+    provider: payment.provider,
+    status: payment.status,
+    amount: payment.amount,
+    currency: payment.currency,
+    createdAt: payment.createdAt
   };
 }
 
@@ -51,13 +158,7 @@ export const memoryRepository = {
   },
 
   async createSession(userId) {
-    const session = {
-      id: createPublicId("sess"),
-      accessToken: `access_${userId}_${Date.now()}`,
-      refreshToken: `refresh_${userId}_${Date.now()}`,
-      userId,
-      createdAt: timestamp()
-    };
+    const session = createSessionTokens(userId);
     memoryDb.sessions.push(session);
     return clone(session);
   },
@@ -124,7 +225,10 @@ export const memoryRepository = {
   },
 
   async getSessionByAccessToken(accessToken) {
-    return clone(memoryDb.sessions.find((session) => session.accessToken === accessToken) || null);
+    return (
+      clone(memoryDb.sessions.find((session) => session.accessToken === accessToken) || null) ||
+      decodeSessionToken(accessToken)
+    );
   },
 
   async updateUser(userId, patch) {
@@ -211,6 +315,153 @@ export const memoryRepository = {
     return clone(memoryDb.orders.find((order) => order.number === number) || null);
   },
 
+  async listAdminOrders(filters = {}) {
+    const page = filters.page || 1;
+    const pageSize = filters.pageSize || 10;
+
+    let orders = [...memoryDb.orders];
+
+    if (filters.status) {
+      orders = orders.filter((order) => order.status === filters.status);
+    }
+
+    if (filters.email) {
+      const emailTerm = filters.email.toLowerCase();
+      orders = orders.filter((order) => (order.customerEmail || "").toLowerCase().includes(emailTerm));
+    }
+
+    if (filters.fulfillmentMode) {
+      orders = orders.filter((order) => order.fulfillmentMode === filters.fulfillmentMode);
+    }
+
+    if (filters.date) {
+      orders = orders.filter((order) => String(order.createdAt || "").slice(0, 10) === filters.date);
+    }
+
+    orders.sort((left, right) => new Date(right.createdAt || 0).getTime() - new Date(left.createdAt || 0).getTime());
+
+    const totalItems = orders.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+    const start = (page - 1) * pageSize;
+    const items = orders.slice(start, start + pageSize).map(toAdminOrderItem);
+
+    return clone({
+      items,
+      meta: {
+        page,
+        pageSize,
+        totalItems,
+        totalPages
+      }
+    });
+  },
+
+  async getAdminOrderByNumber(number) {
+    const order = memoryDb.orders.find((item) => item.number === number);
+    return clone(order ? toAdminOrderDetail(order) : null);
+  },
+
+  async updateOrderStatus(number, status) {
+    const order = memoryDb.orders.find((item) => item.number === number);
+    if (!order) {
+      return null;
+    }
+
+    order.status = status;
+    return clone(order);
+  },
+
+  async listAdminQuoteRequests(filters = {}) {
+    const page = filters.page || 1;
+    const pageSize = filters.pageSize || 10;
+
+    let requests = [...memoryDb.customCakeRequests];
+
+    if (filters.status) {
+      requests = requests.filter((request) => request.status === filters.status);
+    }
+
+    if (filters.email) {
+      const emailTerm = filters.email.toLowerCase();
+      requests = requests.filter((request) => (request.email || "").toLowerCase().includes(emailTerm));
+    }
+
+    if (filters.date) {
+      requests = requests.filter((request) => String(request.createdAt || "").slice(0, 10) === filters.date);
+    }
+
+    requests.sort(
+      (left, right) => new Date(right.createdAt || 0).getTime() - new Date(left.createdAt || 0).getTime()
+    );
+
+    const totalItems = requests.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+    const start = (page - 1) * pageSize;
+
+    return clone({
+      items: requests.slice(start, start + pageSize).map(toAdminQuoteRequestItem),
+      meta: {
+        page,
+        pageSize,
+        totalItems,
+        totalPages
+      }
+    });
+  },
+
+  async getAdminQuoteRequestById(id) {
+    const request = memoryDb.customCakeRequests.find((item) => item.id === id);
+    return clone(request ? toAdminQuoteRequestDetail(request) : null);
+  },
+
+  async updateQuoteRequestStatus(id, status) {
+    const request = memoryDb.customCakeRequests.find((item) => item.id === id);
+    if (!request) {
+      return null;
+    }
+
+    request.status = status;
+    return clone(request);
+  },
+
+  async listAdminPayments(filters = {}) {
+    const page = filters.page || 1;
+    const pageSize = filters.pageSize || 10;
+
+    let payments = [...memoryDb.payments];
+
+    if (filters.status) {
+      payments = payments.filter((payment) => payment.status === filters.status);
+    }
+
+    if (filters.provider) {
+      const providerTerm = filters.provider.toLowerCase();
+      payments = payments.filter((payment) => (payment.provider || "").toLowerCase().includes(providerTerm));
+    }
+
+    if (filters.date) {
+      payments = payments.filter((payment) => String(payment.createdAt || "").slice(0, 10) === filters.date);
+    }
+
+    payments.sort(
+      (left, right) => new Date(right.createdAt || 0).getTime() - new Date(left.createdAt || 0).getTime()
+    );
+
+    const totalItems = payments.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+    const start = (page - 1) * pageSize;
+
+    return clone({
+      items: payments.slice(start, start + pageSize).map(toAdminPaymentItem),
+      meta: {
+        page,
+        pageSize,
+        totalItems,
+        totalPages
+      }
+    });
+  },
+
   async createPayment(payload) {
     memoryDb.payments.push(payload);
     return clone(payload);
@@ -240,6 +491,11 @@ export const memoryRepository = {
 
   async getAdminDashboard() {
     const revenue = memoryDb.orders.reduce((sum, order) => sum + (order.totals?.total || 0), 0);
+    const pendingQuotes = memoryDb.customCakeRequests.filter((request) => request.status === "en-attente").length;
+    const recentOrders = [...memoryDb.orders]
+      .sort((left, right) => new Date(right.createdAt || 0).getTime() - new Date(left.createdAt || 0).getTime())
+      .slice(0, 5)
+      .map(toDashboardRecentOrder);
 
     return clone({
       commandes: {
@@ -252,8 +508,12 @@ export const memoryRepository = {
       },
       chiffreAffaires: {
         total: revenue,
-        currency: "MAD"
-      }
+        currency: "DZD"
+      },
+      devis: {
+        enAttente: pendingQuotes
+      },
+      dernieresCommandes: recentOrders
     });
   }
 };

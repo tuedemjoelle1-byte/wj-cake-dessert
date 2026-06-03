@@ -353,7 +353,298 @@ export function buildOpenApiSpec() {
         get: {
           tags: ["Admin"],
           summary: "Afficher un tableau de bord simplifie",
-          responses: { "200": { description: "Tableau de bord" } }
+          responses: {
+            "200": {
+              description: "Tableau de bord",
+              content: {
+                "application/json": {
+                  schema: schemaRef("AdminDashboardResponse")
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/admin/orders": {
+        get: {
+          tags: ["Admin"],
+          summary: "Lister les commandes du back-office",
+          parameters: [
+            {
+              name: "page",
+              in: "query",
+              schema: { type: "integer", default: 1 }
+            },
+            {
+              name: "pageSize",
+              in: "query",
+              schema: { type: "integer", default: 10 }
+            },
+            {
+              name: "status",
+              in: "query",
+              schema: { type: "string" }
+            },
+            {
+              name: "email",
+              in: "query",
+              schema: { type: "string" }
+            },
+            {
+              name: "fulfillmentMode",
+              in: "query",
+              schema: { type: "string" }
+            },
+            {
+              name: "date",
+              in: "query",
+              schema: { type: "string", example: "2026-06-02" }
+            }
+          ],
+          responses: {
+            "200": {
+              description: "Liste paginee des commandes",
+              content: {
+                "application/json": {
+                  schema: schemaRef("AdminOrdersResponse")
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/admin/orders/{number}": {
+        get: {
+          tags: ["Admin"],
+          summary: "Consulter le detail d'une commande back-office",
+          parameters: [
+            {
+              name: "number",
+              in: "path",
+              required: true,
+              schema: { type: "string" }
+            }
+          ],
+          responses: {
+            "200": {
+              description: "Commande detaillee",
+              content: {
+                "application/json": {
+                  schema: schemaRef("AdminOrderDetailResponse")
+                }
+              }
+            },
+            "404": {
+              description: "Commande introuvable"
+            }
+          }
+        }
+      },
+      "/api/v1/admin/orders/{number}/status": {
+        patch: {
+          tags: ["Admin"],
+          summary: "Mettre a jour le statut d'une commande",
+          parameters: [
+            {
+              name: "number",
+              in: "path",
+              required: true,
+              schema: { type: "string" }
+            }
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  required: ["status"],
+                  properties: {
+                    status: {
+                      type: "string",
+                      enum: ["en-attente", "confirmee", "en-preparation", "prete", "livree", "annulee"]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          responses: {
+            "200": {
+              description: "Commande mise a jour",
+              content: {
+                "application/json": {
+                  schema: schemaRef("AdminOrderDetailResponse")
+                }
+              }
+            },
+            "400": {
+              description: "Statut invalide"
+            },
+            "404": {
+              description: "Commande introuvable"
+            }
+          }
+        }
+      },
+      "/api/v1/admin/quote-requests": {
+        get: {
+          tags: ["Admin"],
+          summary: "Lister les demandes de devis du back-office",
+          parameters: [
+            {
+              name: "page",
+              in: "query",
+              schema: { type: "integer", default: 1 }
+            },
+            {
+              name: "pageSize",
+              in: "query",
+              schema: { type: "integer", default: 10 }
+            },
+            {
+              name: "status",
+              in: "query",
+              schema: { type: "string" }
+            },
+            {
+              name: "email",
+              in: "query",
+              schema: { type: "string" }
+            },
+            {
+              name: "date",
+              in: "query",
+              schema: { type: "string", example: "2026-06-03" }
+            }
+          ],
+          responses: {
+            "200": {
+              description: "Liste paginee des devis",
+              content: {
+                "application/json": {
+                  schema: schemaRef("AdminQuoteRequestsResponse")
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/admin/quote-requests/{id}": {
+        get: {
+          tags: ["Admin"],
+          summary: "Consulter le detail d'une demande de devis",
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "string" }
+            }
+          ],
+          responses: {
+            "200": {
+              description: "Devis detaille",
+              content: {
+                "application/json": {
+                  schema: schemaRef("AdminQuoteRequestDetailResponse")
+                }
+              }
+            },
+            "404": {
+              description: "Devis introuvable"
+            }
+          }
+        }
+      },
+      "/api/v1/admin/quote-requests/{id}/status": {
+        patch: {
+          tags: ["Admin"],
+          summary: "Mettre a jour le statut d'une demande de devis",
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "string" }
+            }
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  required: ["status"],
+                  properties: {
+                    status: {
+                      type: "string",
+                      enum: ["en-attente", "traite", "valide", "refuse"]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          responses: {
+            "200": {
+              description: "Devis mis a jour",
+              content: {
+                "application/json": {
+                  schema: schemaRef("AdminQuoteRequestDetailResponse")
+                }
+              }
+            },
+            "400": {
+              description: "Statut invalide"
+            },
+            "404": {
+              description: "Devis introuvable"
+            }
+          }
+        }
+      },
+      "/api/v1/admin/payments": {
+        get: {
+          tags: ["Admin"],
+          summary: "Lister les paiements du back-office",
+          parameters: [
+            {
+              name: "page",
+              in: "query",
+              schema: { type: "integer", default: 1 }
+            },
+            {
+              name: "pageSize",
+              in: "query",
+              schema: { type: "integer", default: 10 }
+            },
+            {
+              name: "status",
+              in: "query",
+              schema: { type: "string" }
+            },
+            {
+              name: "provider",
+              in: "query",
+              schema: { type: "string" }
+            },
+            {
+              name: "date",
+              in: "query",
+              schema: { type: "string", example: "2026-06-03" }
+            }
+          ],
+          responses: {
+            "200": {
+              description: "Liste paginee des paiements",
+              content: {
+                "application/json": {
+                  schema: schemaRef("AdminPaymentsResponse")
+                }
+              }
+            }
+          }
         }
       },
       "/api/v1/admin/notifications": {
@@ -477,6 +768,252 @@ export function buildOpenApiSpec() {
             orderNumber: { type: "string", example: "CMD-1716230400000" },
             provider: { type: "string", example: "demo-cmi" },
             returnUrl: { type: "string", example: "http://localhost:3000" }
+          }
+        },
+        AdminDashboardResponse: {
+          type: "object",
+          properties: {
+            item: {
+              type: "object",
+              properties: {
+                chiffreAffaires: {
+                  type: "object",
+                  properties: {
+                    total: { type: "number", example: 440 },
+                    currency: { type: "string", example: "DZD" }
+                  }
+                },
+                commandes: {
+                  type: "object",
+                  properties: {
+                    total: { type: "integer", example: 3 },
+                    enAttente: { type: "integer", example: 1 }
+                  }
+                },
+                paiements: {
+                  type: "object",
+                  properties: {
+                    total: { type: "integer", example: 2 },
+                    enAttente: { type: "integer", example: 1 }
+                  }
+                },
+                devis: {
+                  type: "object",
+                  properties: {
+                    enAttente: { type: "integer", example: 4 }
+                  }
+                },
+                dernieresCommandes: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      id: { type: "string" },
+                      number: { type: "string" },
+                      customerEmail: { type: "string" },
+                      customerName: { type: "string", nullable: true },
+                      status: { type: "string" },
+                      paymentStatus: { type: "string" },
+                      fulfillmentMode: { type: "string" },
+                      total: { type: "number" },
+                      currency: { type: "string" },
+                      createdAt: { type: "string" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        AdminOrdersResponse: {
+          type: "object",
+          properties: {
+            items: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  id: { type: "string" },
+                  number: { type: "string" },
+                  status: { type: "string" },
+                  paymentStatus: { type: "string" },
+                  fulfillmentMode: { type: "string" },
+                  customer: {
+                    type: "object",
+                    properties: {
+                      name: { type: "string", nullable: true },
+                      email: { type: "string", nullable: true }
+                    }
+                  },
+                  total: { type: "number" },
+                  currency: { type: "string", example: "DZD" },
+                  createdAt: { type: "string" }
+                }
+              }
+            },
+            meta: {
+              type: "object",
+              properties: {
+                page: { type: "integer" },
+                pageSize: { type: "integer" },
+                totalItems: { type: "integer" },
+                totalPages: { type: "integer" }
+              }
+            }
+          }
+        },
+        AdminOrderDetailResponse: {
+          type: "object",
+          properties: {
+            item: {
+              type: "object",
+              properties: {
+                id: { type: "string" },
+                number: { type: "string" },
+                status: { type: "string" },
+                paymentStatus: { type: "string" },
+                fulfillmentMode: { type: "string" },
+                customer: {
+                  type: "object",
+                  properties: {
+                    name: { type: "string", nullable: true },
+                    email: { type: "string", nullable: true }
+                  }
+                },
+                delivery: {
+                  type: "object",
+                  properties: {
+                    address: { type: "string", nullable: true },
+                    slotId: { type: "string", nullable: true }
+                  }
+                },
+                items: {
+                  type: "array",
+                  items: {
+                    type: "object"
+                  }
+                },
+                totals: {
+                  type: "object",
+                  properties: {
+                    subtotal: { type: "number" },
+                    deliveryFee: { type: "number" },
+                    total: { type: "number" },
+                    currency: { type: "string", example: "DZD" }
+                  }
+                },
+                createdAt: { type: "string" }
+              }
+            }
+          }
+        },
+        AdminQuoteRequestsResponse: {
+          type: "object",
+          properties: {
+            items: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  id: { type: "string" },
+                  status: { type: "string" },
+                  customer: {
+                    type: "object",
+                    properties: {
+                      name: { type: "string", nullable: true },
+                      email: { type: "string", nullable: true },
+                      phone: { type: "string", nullable: true }
+                    }
+                  },
+                  eventDate: { type: "string" },
+                  servings: { type: "integer" },
+                  estimatedPrice: {
+                    type: "object",
+                    properties: {
+                      amount: { type: "number" },
+                      currency: { type: "string", example: "DZD" }
+                    }
+                  },
+                  createdAt: { type: "string" }
+                }
+              }
+            },
+            meta: {
+              type: "object",
+              properties: {
+                page: { type: "integer" },
+                pageSize: { type: "integer" },
+                totalItems: { type: "integer" },
+                totalPages: { type: "integer" }
+              }
+            }
+          }
+        },
+        AdminQuoteRequestDetailResponse: {
+          type: "object",
+          properties: {
+            item: {
+              type: "object",
+              properties: {
+                id: { type: "string" },
+                status: { type: "string" },
+                customer: {
+                  type: "object",
+                  properties: {
+                    name: { type: "string", nullable: true },
+                    email: { type: "string", nullable: true },
+                    phone: { type: "string", nullable: true }
+                  }
+                },
+                eventDate: { type: "string" },
+                servings: { type: "integer" },
+                style: { type: "string" },
+                flavors: {
+                  type: "array",
+                  items: { type: "string" }
+                },
+                messageOnCake: { type: "string" },
+                notes: { type: "string" },
+                estimatedPrice: {
+                  type: "object",
+                  properties: {
+                    amount: { type: "number" },
+                    currency: { type: "string", example: "DZD" },
+                    disclaimer: { type: "string" }
+                  }
+                },
+                createdAt: { type: "string" }
+              }
+            }
+          }
+        },
+        AdminPaymentsResponse: {
+          type: "object",
+          properties: {
+            items: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  id: { type: "string" },
+                  orderNumber: { type: "string" },
+                  provider: { type: "string" },
+                  status: { type: "string" },
+                  amount: { type: "number" },
+                  currency: { type: "string", example: "DZD" },
+                  createdAt: { type: "string" }
+                }
+              }
+            },
+            meta: {
+              type: "object",
+              properties: {
+                page: { type: "integer" },
+                pageSize: { type: "integer" },
+                totalItems: { type: "integer" },
+                totalPages: { type: "integer" }
+              }
+            }
           }
         }
       }
