@@ -661,7 +661,7 @@ function mapCategory(categorySlug) {
 }
 
 async function fetchJson(url, options = {}) {
-  const response = await fetch(url, {
+  const response = await fetch(resolveApiUrl(url), {
     headers: {
       "Content-Type": "application/json"
     },
@@ -680,5 +680,23 @@ async function fetchJson(url, options = {}) {
 
 function formatJson(value) {
   return JSON.stringify(value, null, 2);
+}
+
+function resolveBackendOrigin() {
+  const configuredOrigin =
+    window.WJ_API_ORIGIN ||
+    document.querySelector('meta[name="wj-api-origin"]')?.content?.trim() ||
+    "https://wj-cake-dessert.onrender.com";
+
+  return configuredOrigin.replace(/\/+$/, "");
+}
+
+function resolveApiUrl(url) {
+  if (/^https?:\/\//i.test(url)) {
+    return url;
+  }
+
+  const backendOrigin = resolveBackendOrigin();
+  return `${backendOrigin}${url.startsWith("/") ? url : `/${url}`}`;
 }
 

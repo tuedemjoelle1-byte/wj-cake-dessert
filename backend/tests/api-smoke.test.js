@@ -64,6 +64,21 @@ test("GET /api/v1 expose les routes principales", async () => {
   });
 });
 
+test("OPTIONS /api/v1 renvoie les en-tetes CORS pour une origine Vercel", async () => {
+  await withServer(async (baseUrl) => {
+    const response = await fetch(`${baseUrl}/api/v1`, {
+      method: "OPTIONS",
+      headers: {
+        Origin: "https://wj-cake-dessert-seven.vercel.app"
+      }
+    });
+
+    assert.equal(response.status, 204);
+    assert.equal(response.headers.get("access-control-allow-origin"), "https://wj-cake-dessert-seven.vercel.app");
+    assert.match(response.headers.get("access-control-allow-methods") || "", /OPTIONS/);
+  });
+});
+
 test("GET /api/v1/catalog/categories renvoie les categories", async () => {
   await withServer(async (baseUrl) => {
     const response = await fetch(`${baseUrl}/api/v1/catalog/categories`);

@@ -17,7 +17,8 @@ export const env = {
   supabaseUrl: readEnv("SUPABASE_URL"),
   supabaseAnonKey: readEnv("SUPABASE_ANON_KEY"),
   supabaseServiceRoleKey: readEnv("SUPABASE_SERVICE_ROLE_KEY"),
-  supabaseSchema: readEnv("SUPABASE_SCHEMA", "public")
+  supabaseSchema: readEnv("SUPABASE_SCHEMA", "public"),
+  allowedOrigins: readEnv("ALLOWED_ORIGINS")
 };
 
 export function isSupabaseConfigured() {

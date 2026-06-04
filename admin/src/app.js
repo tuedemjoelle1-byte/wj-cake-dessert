@@ -134,6 +134,7 @@ boot().catch((error) => {
 
 async function boot() {
   bindEvents();
+  configureBackendLinks();
 
   if (!(await restoreAdminSession())) {
     showLogin();
@@ -526,6 +527,12 @@ function bindEvents() {
       elements.quoteStatusSubmit.disabled = false;
     }
   });
+}
+
+function configureBackendLinks() {
+  for (const link of document.querySelectorAll("[data-backend-link='swagger']")) {
+    link.href = `${resolveBackendOrigin()}/swagger`;
+  }
 }
 
 async function loadDashboard() {
@@ -984,7 +991,7 @@ async function fetchJson(url, options = {}) {
     ...(options.headers || {})
   };
 
-  const response = await fetch(url, {
+  const response = await fetch(resolveApiUrl(url), {
     ...options,
     headers: mergedHeaders
   });
@@ -1002,4 +1009,22 @@ async function fetchJson(url, options = {}) {
   }
 
   return payload;
+}
+
+function resolveBackendOrigin() {
+  const configuredOrigin =
+    window.WJ_API_ORIGIN ||
+    document.querySelector('meta[name="wj-api-origin"]')?.content?.trim() ||
+    "https://wj-cake-dessert.onrender.com";
+
+  return configuredOrigin.replace(/\/+$/, "");
+}
+
+function resolveApiUrl(url) {
+  if (/^https?:\/\//i.test(url)) {
+    return url;
+  }
+
+  const backendOrigin = resolveBackendOrigin();
+  return `${backendOrigin}${url.startsWith("/") ? url : `/${url}`}`;
 }

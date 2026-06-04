@@ -1,4 +1,4 @@
-import { fail } from "./http.js";
+import { applySecurityHeaders, fail, noContent } from "./http.js";
 import { readJson } from "./request.js";
 
 function splitPath(pathname) {
@@ -42,6 +42,11 @@ export function createRouter() {
   const handler = async (req, res) => {
     const method = req.method || "GET";
     const url = new URL(req.url || "/", "http://localhost");
+    applySecurityHeaders(req, res);
+
+    if (method === "OPTIONS") {
+      return noContent(res);
+    }
 
     for (const route of routes) {
       if (route.method !== method) {
