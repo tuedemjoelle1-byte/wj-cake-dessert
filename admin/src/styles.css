@@ -426,6 +426,9 @@ body.is-auth-locked .admin-shell {
 .brand-cake-logo {
   width: 64px;
   height: 64px;
+  display: block;
+  object-fit: contain;
+  border-radius: 50%;
 }
 
 .brand-text {

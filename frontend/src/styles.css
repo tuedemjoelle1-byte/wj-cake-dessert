@@ -605,7 +605,10 @@ textarea {
 .brand-cake-logo {
   width: 64px;
   height: 64px;
-  overflow: visible;
+  display: block;
+  object-fit: contain;
+  border-radius: 50%;
+  overflow: hidden;
   animation: brand-cake-logo-in 1200ms cubic-bezier(0.18, 0.88, 0.26, 1) both;
 }
 
