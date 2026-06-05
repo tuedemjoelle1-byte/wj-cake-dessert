@@ -851,6 +851,7 @@ body.is-auth-locked .admin-shell {
 
 .topbar-right {
   margin-left: auto;
+  position: relative;
   display: flex;
   align-items: center;
   gap: 14px;
@@ -887,6 +888,7 @@ body.is-auth-locked .admin-shell {
   display: grid;
   place-items: center;
   box-shadow: 0 10px 24px rgba(223, 178, 157, 0.16);
+  cursor: pointer;
 }
 
 .notif-icon::before {
@@ -938,6 +940,93 @@ body.is-auth-locked .admin-shell {
 .admin-name {
   font-weight: 600;
   font-size: 0.95rem;
+}
+
+.notif-panel {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 62px;
+  width: min(360px, calc(100vw - 40px));
+  max-height: 420px;
+  overflow: auto;
+  padding: 18px;
+  border-radius: 22px;
+  border: 1px solid rgba(236, 216, 205, 0.94);
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 24px 50px rgba(39, 24, 17, 0.14);
+  z-index: 20;
+}
+
+.notif-panel__header {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+
+.notif-panel__header strong {
+  font-size: 1rem;
+}
+
+.notif-panel__summary {
+  color: var(--text-muted);
+  font-size: 0.84rem;
+}
+
+.notif-list {
+  display: grid;
+  gap: 12px;
+}
+
+.notif-empty {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.notif-item {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, #ffffff, #fff8fb);
+}
+
+.notif-item--warn {
+  border-color: rgba(245, 158, 66, 0.3);
+  background: linear-gradient(180deg, #fffaf2, #fff5ea);
+}
+
+.notif-item--info {
+  border-color: rgba(91, 192, 190, 0.28);
+  background: linear-gradient(180deg, #f5fffe, #eefaf8);
+}
+
+.notif-item--accent {
+  border-color: rgba(244, 84, 122, 0.24);
+  background: linear-gradient(180deg, #fff6f9, #fff0f4);
+}
+
+.notif-item__copy strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.notif-item__copy p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.notif-item__action {
+  justify-self: start;
+  min-height: 38px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(236, 216, 205, 0.9);
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--text);
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .content {
@@ -1701,6 +1790,13 @@ tbody tr:hover td {
   .topbar-story {
     width: 100%;
     order: 4;
+  }
+
+  .notif-panel {
+    right: 0;
+    left: 0;
+    width: auto;
+    top: calc(100% + 10px);
   }
 
   .stat-grid {

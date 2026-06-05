@@ -1,6 +1,7 @@
 const currencyFormatter = new Intl.NumberFormat("fr-DZ");
 const tokenStorageKey = "wj_admin_token";
 let adminToken = localStorage.getItem(tokenStorageKey) || "";
+let notificationPollHandle = null;
 
 const elements = {
   loginShell: document.querySelector("#admin-login-shell"),
@@ -12,6 +13,10 @@ const elements = {
   logoutButton: document.querySelector("#admin-logout"),
   apiStatus: document.querySelector("#api-status"),
   notifBadge: document.querySelector("#notif-badge"),
+  notifToggle: document.querySelector("#notif-toggle"),
+  notifPanel: document.querySelector("#notif-panel"),
+  notifSummary: document.querySelector("#notif-summary"),
+  notifList: document.querySelector("#notif-list"),
   kpiGrid: document.querySelector("#kpi-grid"),
   salesChart: document.querySelector("#sales-chart"),
   topProductsChart: document.querySelector("#top-products-chart"),
@@ -87,6 +92,13 @@ const paymentState = {
     provider: "",
     status: ""
   }
+};
+
+const adminData = {
+  dashboard: null,
+  orders: [],
+  quotes: [],
+  payments: []
 };
 
 const kpiMedia = {
@@ -364,6 +376,12 @@ function renderPayments(items) {
 }
 
 function bindEvents() {
+  elements.notifToggle?.addEventListener("click", () => {
+    const nextState = elements.notifPanel.hidden;
+    elements.notifPanel.hidden = !nextState;
+    elements.notifToggle.setAttribute("aria-expanded", String(nextState));
+  });
+
   elements.loginForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     elements.loginSubmit.disabled = true;
@@ -396,8 +414,28 @@ function bindEvents() {
   elements.logoutButton.addEventListener("click", () => {
     adminToken = "";
     localStorage.removeItem(tokenStorageKey);
+    stopAdminPolling();
     elements.apiStatus.textContent = "Session admin fermée";
     showLogin();
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!elements.notifPanel || !elements.notifToggle || elements.notifPanel.hidden) {
+      return;
+    }
+
+    const target = event.target;
+    if (elements.notifPanel.contains(target) || elements.notifToggle.contains(target)) {
+      return;
+    }
+
+    closeNotificationsPanel();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      closeNotificationsPanel();
+    }
   });
 
   elements.ordersFilters.addEventListener("submit", async (event) => {
@@ -544,7 +582,9 @@ function configureBackendLinks() {
 
 async function loadDashboard() {
   const payload = await fetchJson("/api/v1/admin/dashboard");
+  adminData.dashboard = payload.item;
   renderKpis(payload.item);
+  syncNotifications();
   return payload;
 }
 
@@ -556,6 +596,7 @@ async function restoreAdminSession() {
   try {
     await fetchJson("/api/v1/admin/me");
     hideLogin();
+    startAdminPolling();
     return true;
   } catch {
     adminToken = "";
@@ -567,6 +608,7 @@ async function restoreAdminSession() {
 async function loadAdminApp() {
   elements.systemState.textContent = "Chargement du tableau de bord...";
   await Promise.all([loadDashboard(), loadOrders(), loadQuotes(), loadPayments()]);
+  startAdminPolling();
   elements.apiStatus.textContent = "Connecté au backend W.J. Cake & Dessert";
   elements.systemState.textContent = "Données synchronisées";
 }
@@ -574,6 +616,7 @@ async function loadAdminApp() {
 function showLogin() {
   document.body.classList.add("is-auth-locked");
   elements.loginShell.hidden = false;
+  closeNotificationsPanel();
   elements.loginFeedback.textContent = "Utilisez les identifiants admin du projet.";
 }
 
@@ -602,8 +645,10 @@ async function loadOrders() {
 
   const payload = await fetchJson(`/api/v1/admin/orders?${query.toString()}`);
   orderState.totalPages = payload.meta.totalPages || 1;
+  adminData.orders = payload.items || [];
   renderOrders(payload.items || []);
   renderPagination(payload.meta);
+  syncNotifications();
   return payload;
 }
 
@@ -623,8 +668,10 @@ async function loadQuotes() {
 
   const payload = await fetchJson(`/api/v1/admin/quote-requests?${query.toString()}`);
   quoteState.totalPages = payload.meta.totalPages || 1;
+  adminData.quotes = payload.items || [];
   renderQuotes(payload.items || []);
   renderQuotesPagination(payload.meta);
+  syncNotifications();
   return payload;
 }
 
@@ -644,8 +691,10 @@ async function loadPayments() {
 
   const payload = await fetchJson(`/api/v1/admin/payments?${query.toString()}`);
   paymentState.totalPages = payload.meta.totalPages || 1;
+  adminData.payments = payload.items || [];
   renderPayments(payload.items || []);
   renderPaymentsPagination(payload.meta);
+  syncNotifications();
   return payload;
 }
 
@@ -948,6 +997,183 @@ function updateNotificationBadge(count) {
 
   elements.notifBadge.textContent = String(count);
   elements.notifBadge.hidden = count <= 0;
+}
+
+function syncNotifications() {
+  const notifications = deriveNotifications(adminData);
+  renderNotifications(notifications);
+}
+
+function deriveNotifications(data) {
+  const notifications = [];
+  const dashboard = data.dashboard;
+  const pendingOrders = Number(dashboard?.commandes?.enAttente || 0);
+  const pendingQuotes = Number(dashboard?.devis?.enAttente || 0);
+  const pendingPayments = Number(dashboard?.paiements?.enAttente || 0);
+
+  if (pendingOrders > 0) {
+    notifications.push({
+      id: "pending-orders",
+      tone: "warn",
+      title: `${pendingOrders} commande${pendingOrders > 1 ? "s" : ""} en attente`,
+      message: "Des commandes attendent une confirmation ou une préparation.",
+      actionLabel: "Voir les commandes",
+      action: { type: "section", target: "#orders-section" }
+    });
+  }
+
+  if (pendingQuotes > 0) {
+    notifications.push({
+      id: "pending-quotes",
+      tone: "info",
+      title: `${pendingQuotes} devis à traiter`,
+      message: "Des demandes clients attendent une réponse ou une validation.",
+      actionLabel: "Voir les devis",
+      action: { type: "section", target: "#quotes-section" }
+    });
+  }
+
+  if (pendingPayments > 0) {
+    notifications.push({
+      id: "pending-payments",
+      tone: "accent",
+      title: `${pendingPayments} paiement${pendingPayments > 1 ? "s" : ""} en attente`,
+      message: "Vérifie les paiements et les providers à finaliser.",
+      actionLabel: "Voir les paiements",
+      action: { type: "section", target: "#payments-section" }
+    });
+  }
+
+  const recentOrder = data.orders.find((item) => item.status === "en-attente") || data.orders[0];
+  if (recentOrder) {
+    notifications.push({
+      id: `order-${recentOrder.number}`,
+      tone: "soft",
+      title: `Commande ${recentOrder.number}`,
+      message: `${recentOrder.customer?.name || recentOrder.customer?.email || "Client"} • ${formatDate(recentOrder.createdAt)}`,
+      actionLabel: "Ouvrir le détail",
+      action: { type: "order", target: recentOrder.number }
+    });
+  }
+
+  const recentQuote = data.quotes.find((item) => item.status === "en-attente") || data.quotes[0];
+  if (recentQuote) {
+    notifications.push({
+      id: `quote-${recentQuote.id}`,
+      tone: "soft",
+      title: `Devis ${recentQuote.id}`,
+      message: `${recentQuote.customer?.name || recentQuote.customer?.email || "Client"} • ${formatDate(recentQuote.createdAt)}`,
+      actionLabel: "Lire le brief",
+      action: { type: "quote", target: recentQuote.id }
+    });
+  }
+
+  const recentPayment = data.payments.find((item) => item.status === "en-attente") || data.payments[0];
+  if (recentPayment) {
+    notifications.push({
+      id: `payment-${recentPayment.id}`,
+      tone: "soft",
+      title: `Paiement ${recentPayment.id}`,
+      message: `${recentPayment.provider} • ${currencyFormatter.format(recentPayment.amount)} ${recentPayment.currency}`,
+      actionLabel: "Ouvrir la section",
+      action: { type: "section", target: "#payments-section" }
+    });
+  }
+
+  return notifications.slice(0, 6);
+}
+
+function renderNotifications(items) {
+  if (!elements.notifList || !elements.notifSummary) {
+    return;
+  }
+
+  const totalPending =
+    Number(adminData.dashboard?.commandes?.enAttente || 0) +
+    Number(adminData.dashboard?.devis?.enAttente || 0) +
+    Number(adminData.dashboard?.paiements?.enAttente || 0);
+
+  elements.notifSummary.textContent =
+    totalPending > 0 ? `${totalPending} élément${totalPending > 1 ? "s" : ""} à surveiller` : "Aucune alerte";
+
+  if (!items.length) {
+    elements.notifList.innerHTML = `<p class="notif-empty">Aucune notification pour le moment.</p>`;
+    return;
+  }
+
+  elements.notifList.innerHTML = items
+    .map(
+      (item) => `
+        <article class="notif-item notif-item--${item.tone}">
+          <div class="notif-item__copy">
+            <strong>${item.title}</strong>
+            <p>${item.message}</p>
+          </div>
+          <button class="notif-item__action" type="button" data-action-type="${item.action.type}" data-action-target="${item.action.target}">
+            ${item.actionLabel}
+          </button>
+        </article>
+      `
+    )
+    .join("");
+
+  for (const button of elements.notifList.querySelectorAll(".notif-item__action")) {
+    button.addEventListener("click", () => {
+      void handleNotificationAction(button.dataset.actionType, button.dataset.actionTarget);
+    });
+  }
+}
+
+async function handleNotificationAction(type, target) {
+  closeNotificationsPanel();
+
+  if (type === "section") {
+    document.querySelector(target)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    return;
+  }
+
+  if (type === "order") {
+    document.querySelector("#details-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    await loadOrderDetail(target);
+    return;
+  }
+
+  if (type === "quote") {
+    document.querySelector("#details-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    await loadQuoteDetail(target);
+  }
+}
+
+function closeNotificationsPanel() {
+  if (!elements.notifPanel || !elements.notifToggle) {
+    return;
+  }
+
+  elements.notifPanel.hidden = true;
+  elements.notifToggle.setAttribute("aria-expanded", "false");
+}
+
+function startAdminPolling() {
+  stopAdminPolling();
+
+  if (!adminToken) {
+    return;
+  }
+
+  notificationPollHandle = window.setInterval(() => {
+    if (!adminToken || document.hidden) {
+      return;
+    }
+
+    void Promise.all([loadDashboard(), loadOrders(), loadQuotes(), loadPayments()]).catch(() => {});
+  }, 60000);
+}
+
+function stopAdminPolling() {
+  if (notificationPollHandle) {
+    window.clearInterval(notificationPollHandle);
+    notificationPollHandle = null;
+  }
 }
 
 function translateStatus(status) {
