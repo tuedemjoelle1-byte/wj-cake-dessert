@@ -2232,6 +2232,46 @@ textarea {
     grid-template-columns: 1fr;
   }
 
+  .hero-actions,
+  .cta-actions,
+  .consultation-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .hero-actions .button,
+  .cta-actions .button,
+  .consultation-actions .button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .hero-visual {
+    min-height: 520px;
+  }
+
+  .hero-floating-note,
+  .hero-badge {
+    left: 18px;
+    right: 18px;
+  }
+
+  .hero-floating-note {
+    top: 18px;
+    max-width: none;
+    padding: 16px 18px;
+  }
+
+  .hero-badge {
+    bottom: 18px;
+    padding: 18px;
+  }
+
+  .hero-badge strong {
+    font-size: 1.2rem;
+    line-height: 1.4;
+  }
+
   .site-footer,
   .section-heading {
     flex-direction: column;
@@ -2305,6 +2345,20 @@ textarea {
     font-size: 3rem;
   }
 
+  .announcement-bar {
+    padding: 10px 12px;
+    font-size: 0.64rem;
+    letter-spacing: 0.14em;
+  }
+
+  .announcement-track {
+    gap: 28px;
+  }
+
+  .announcement-track span::after {
+    margin-left: 28px;
+  }
+
   .hero-stats {
     grid-template-columns: 1fr;
   }
@@ -2344,20 +2398,66 @@ textarea {
   }
 
   .hero-visual {
-    min-height: 420px;
+    min-height: 360px;
   }
 
   .hero-floating-note {
-    top: 16px;
-    right: 16px;
-    left: 16px;
-    max-width: none;
+    display: none;
+  }
+
+  .hero-badge {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    padding: 14px 16px;
+  }
+
+  .hero-badge p {
+    font-size: 0.62rem;
+    letter-spacing: 0.16em;
+  }
+
+  .hero-badge strong {
+    font-size: 1rem;
   }
 
   .api-meta,
   .cta-actions {
     flex-direction: column;
     align-items: center;
+  }
+
+  .api-meta {
+    gap: 8px;
+    text-align: center;
+  }
+
+  .category-pills,
+  .option-grid {
+    gap: 10px;
+  }
+
+  .pill-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .feature-card,
+  .step-card,
+  .review-card,
+  .occasion-card__body,
+  .summary-card {
+    padding: 20px;
+  }
+
+  .consultation-band__copy h2 {
+    font-size: 2.4rem;
+  }
+
+  .result-box {
+    min-height: 120px;
+    padding: 14px;
+    font-size: 0.92rem;
   }
 
   .site-footer,
@@ -2377,9 +2477,11 @@ textarea {
   .deco-eight,
   .deco-nine,
   .deco-ten,
+  .background-patisserie,
+  .background-texture,
   .background-patisserie--soft .cake-deco,
   .mini-cake {
-    opacity: 0.05;
+    opacity: 0.03;
   }
 }
 
@@ -2396,6 +2498,13 @@ textarea {
     font-size: 2.35rem;
   }
 
+  .hero-copy p,
+  .section-lead,
+  .consultation-band__copy p,
+  .product-description {
+    font-size: 0.96rem;
+  }
+
   .hero-copy,
   .configurator-copy,
   .configurator-summary,
@@ -2406,12 +2515,35 @@ textarea {
   }
 
   .hero-visual {
-    min-height: 340px;
+    min-height: 320px;
   }
 
-  .hero-badge,
-  .hero-floating-note {
-    left: 12px;
-    right: 12px;
+  .hero-badge {
+    padding: 12px 14px;
+  }
+
+  .hero-stats article {
+    padding: 16px;
+  }
+
+  .hero-stats strong {
+    font-size: 1.45rem;
+  }
+
+  .product-card__image,
+  .occasion-card img,
+  .configurator-summary img,
+  .consultation-band__media {
+    height: 220px;
+    min-height: 220px;
+  }
+
+  .summary-card h3,
+  .product-card h3 {
+    font-size: 1.55rem;
+  }
+
+  .summary-price strong {
+    font-size: 2.1rem;
   }
 }
