@@ -13,7 +13,11 @@ const mimeTypes = {
   ".css": "text/css; charset=utf-8",
   ".js": "application/javascript; charset=utf-8",
   ".json": "application/json; charset=utf-8",
-  ".svg": "image/svg+xml; charset=utf-8"
+  ".svg": "image/svg+xml; charset=utf-8",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".webp": "image/webp"
 };
 
 createServer(async (req, res) => {
@@ -56,10 +60,12 @@ createServer(async (req, res) => {
   const extension = extname(filePath);
   const contentType = mimeTypes[extension] || "application/octet-stream";
   const file = readFileSync(filePath);
+  const cacheControl =
+    extension === ".html" ? "no-store" : "public, max-age=600, stale-while-revalidate=86400";
 
   res.writeHead(200, {
     "Content-Type": contentType,
-    "Cache-Control": "no-store"
+    "Cache-Control": cacheControl
   });
   res.end(file);
 }).listen(port, () => {

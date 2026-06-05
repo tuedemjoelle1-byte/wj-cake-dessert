@@ -202,17 +202,20 @@ async function boot() {
   renderAll();
 
   try {
-    const [productsResponse, zonesResponse] = await Promise.all([
-      fetchJson(`${apiBase}/catalog/products`),
-      fetchJson(`${apiBase}/delivery/zones`)
-    ]);
-
+    const productsResponse = await fetchJson(`${apiBase}/catalog/products`);
     state.apiAvailable = true;
     state.products = productsResponse.items.map(toUiProduct);
-    state.zonesCount = zonesResponse.items.length;
     elements.apiStatus.textContent = "Catalogue et livraison connectés au backend W.J. Cake & Dessert.";
+    renderAll();
   } catch (error) {
     elements.apiStatus.textContent = "API indisponible, affichage du catalogue de démonstration W.J. Cake & Dessert.";
+  }
+
+  try {
+    const zonesResponse = await fetchJson(`${apiBase}/delivery/zones`);
+    state.zonesCount = zonesResponse.items.length;
+  } catch (error) {
+    state.zonesCount = 0;
   }
 
   renderAll();
@@ -401,7 +404,7 @@ function renderStaticCollections() {
     .map(
       (occasion) => `
         <article class="occasion-card">
-          <img src="${occasion.image}" alt="${occasion.title}" />
+          <img src="${occasion.image}" alt="${occasion.title}" loading="lazy" decoding="async" />
           <div class="occasion-card__body">
             <h3>${occasion.title}</h3>
             <p>${occasion.text}</p>
@@ -427,7 +430,7 @@ function renderStaticCollections() {
     .map(
       (image) => `
         <div class="gallery-item">
-          <img src="${image}" alt="Creation W.J. Cake & Dessert" />
+          <img src="${image}" alt="Creation W.J. Cake & Dessert" loading="lazy" decoding="async" />
         </div>
       `
     )
@@ -497,7 +500,7 @@ function renderProducts() {
     card.className = "product-card";
     card.innerHTML = `
       <div class="product-card__image">
-        <img src="${product.image}" alt="${product.name}" />
+        <img src="${product.image}" alt="${product.name}" loading="lazy" decoding="async" />
         <span class="product-tag">${product.tag}</span>
       </div>
       <div class="product-card__body">
