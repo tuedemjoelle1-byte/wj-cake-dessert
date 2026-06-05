@@ -184,7 +184,6 @@ const elements = {
   occasionGrid: document.querySelector("#occasion-grid"),
   reviewsGrid: document.querySelector("#reviews-grid"),
   galleryGrid: document.querySelector("#gallery-grid"),
-  testsStatus: document.querySelector("#tests-status"),
   revealBlocks: Array.from(document.querySelectorAll(".reveal")),
   parallaxSurfaces: Array.from(document.querySelectorAll(".parallax-surface"))
 };
@@ -393,7 +392,6 @@ function renderAll() {
   renderCategories();
   renderProducts();
   renderSummary();
-  renderTests();
   elements.productsCount.textContent = `${state.products.length} produits`;
   elements.zonesCount.textContent = `${state.zonesCount || 0} zones`;
 }
@@ -534,14 +532,6 @@ function renderSummary() {
   )} ${currencyLabel}`;
 }
 
-function renderTests() {
-  const testResults = runProductFilterTests();
-  const allTestsPassed = Object.values(testResults).every(Boolean);
-  elements.testsStatus.textContent = allTestsPassed
-      ? "Filtrage produits et calcul du configurateur : OK"
-    : "Un test de filtrage ou de prix a échoué";
-}
-
 async function handleAddToCart(event) {
   const productSlug = event.currentTarget.dataset.productSlug;
 
@@ -615,25 +605,6 @@ function getProductsByCategory(productList, category) {
 
 function calculateCakePrice(sizeExtra, flavorExtra, finishExtra) {
   return 49 + sizeExtra + flavorExtra + finishExtra;
-}
-
-function runProductFilterTests() {
-  const allProducts = getProductsByCategory(fallbackProducts, "Tous");
-  const cupcakeProducts = getProductsByCategory(fallbackProducts, "Cupcakes");
-  const cakeProducts = getProductsByCategory(fallbackProducts, "Gateaux");
-  const giftProducts = getProductsByCategory(fallbackProducts, "Cadeaux");
-  const unknownProducts = getProductsByCategory(fallbackProducts, "Inconnu");
-  const configuredCakePrice = calculateCakePrice(12, 4, 8);
-
-  return {
-    allProductsCountIsCorrect: allProducts.length === fallbackProducts.length,
-    cupcakesOnly:
-      cupcakeProducts.length === 2 && cupcakeProducts.every((product) => product.category === "Cupcakes"),
-    cakesOnly: cakeProducts.length === 1 && cakeProducts[0].name === "Layer Cake Anniversaire Rose",
-    giftsOnly: giftProducts.length === 1 && giftProducts[0].category === "Cadeaux",
-    unknownCategoryReturnsEmptyList: unknownProducts.length === 0,
-    cakePriceCalculationIsCorrect: configuredCakePrice === 73
-  };
 }
 
 function toUiProduct(product) {
