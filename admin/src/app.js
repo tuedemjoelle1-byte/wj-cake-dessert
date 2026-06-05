@@ -11,6 +11,7 @@ const elements = {
   loginFeedback: document.querySelector("#admin-login-feedback"),
   logoutButton: document.querySelector("#admin-logout"),
   apiStatus: document.querySelector("#api-status"),
+  notifBadge: document.querySelector("#notif-badge"),
   kpiGrid: document.querySelector("#kpi-grid"),
   salesChart: document.querySelector("#sales-chart"),
   topProductsChart: document.querySelector("#top-products-chart"),
@@ -146,6 +147,7 @@ async function boot() {
 
 function renderKpis(dashboard) {
   if (!dashboard) {
+    updateNotificationBadge(0);
     elements.kpiGrid.innerHTML = [
       { label: "Chiffre d'affaires", value: "--", note: "Données en attente", iconClass: "pink", badgeClass: "neutral", ...kpiMedia.revenue },
       { label: "Commandes", value: "--", note: "Données en attente", iconClass: "orange", badgeClass: "neutral", ...kpiMedia.orders },
@@ -161,6 +163,11 @@ function renderKpis(dashboard) {
   }
 
   const analytics = deriveAnalytics(dashboard);
+  updateNotificationBadge(
+    Number(dashboard.commandes?.enAttente || 0) +
+      Number(dashboard.devis?.enAttente || 0) +
+      Number(dashboard.paiements?.enAttente || 0)
+  );
   const cards = [
     {
       label: "Chiffre d'affaires",
@@ -932,6 +939,15 @@ function renderEmptyChart() {
 
 function renderEmptyDonut() {
   return `<div class="empty-chart">Les top ventes apparaîtront ici.</div>`;
+}
+
+function updateNotificationBadge(count) {
+  if (!elements.notifBadge) {
+    return;
+  }
+
+  elements.notifBadge.textContent = String(count);
+  elements.notifBadge.hidden = count <= 0;
 }
 
 function translateStatus(status) {
