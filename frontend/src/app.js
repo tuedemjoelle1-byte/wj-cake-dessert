@@ -1,6 +1,6 @@
 ﻿const apiBase = "/api/v1";
 
-const currencyLabel = "DA";
+const currencyLabel = "DHS";
 
 const fallbackProducts = [
   {
@@ -74,54 +74,122 @@ const fallbackProducts = [
 
 const occasions = [
   {
-    title: "Anniversaire",
-    image:
-      "https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?q=80&w=1000&auto=format&fit=crop",
-    text: "Gâteaux personnalisés, coffrets et cupcakes festifs pour célébrer avec style."
+    title: "Anniversaires enfants",
+    image: "./client-cake-ariel.jpeg",
+    text: "Themes sirene, personnages et couleurs franches pour des gateaux qui marquent la fete."
   },
   {
-    title: "Mariage",
-    image:
-      "https://images.unsplash.com/photo-1535141192574-5d4897c12636?q=80&w=1000&auto=format&fit=crop",
-    text: "Créations élégantes sur devis pour cérémonies, réceptions et tables raffinées."
+    title: "Anniversaires chic",
+    image: "./client-cake-birthday.jpeg",
+    text: "Finitions propres, couleurs douces et rendu elegant pour les celebrations adultes."
   },
   {
-    title: "Baby shower",
-    image:
-      "https://images.unsplash.com/photo-1578985545062-69928b1d9587?q=80&w=1000&auto=format&fit=crop",
-    text: "Douceurs pastel, messages personnalisés et coffrets pensés pour les événements tendres."
+    title: "Modeles personnages",
+    image: "./client-cake-minnie.jpeg",
+    text: "Creations visuelles fortes pour Minnie, princesses et univers sur mesure."
   },
   {
-    title: "Entreprise",
-    image:
-      "https://images.unsplash.com/photo-1519869325930-281384150729?q=80&w=1000&auto=format&fit=crop",
-    text: "Coffrets cadeaux pour équipes, clients et événements professionnels."
+    title: "Cadeaux et corporate",
+    image: "./client-cake-corporate.jpeg",
+    text: "Gateaux photo, messages de remerciement et commandes pensees pour les moments pros."
   }
 ];
 
 const reviews = [
   {
-    name: "Sarah M.",
-    text: "Le coffret était magnifique, très élégant, et la commande était beaucoup plus fluide.",
-    rating: 5
+    name: "Cliente satisfaite",
+    text: "Le gateau etait parfait, j'ai beaucoup aime, surtout la creme rouge et verte.",
+    rating: 5,
+    theme: "Gout",
+    source: "Retour WhatsApp",
+    image: "./client-review-perfect.jpeg",
+    featured: true
   },
   {
-    name: "Kevin D.",
-    text: "Commande rapide, présentation premium, parfaite pour un anniversaire à Casablanca.",
-    rating: 5
+    name: "Cliente buche",
+    text: "Merci beaucoup, c'etait tres beau et bon.",
+    rating: 5,
+    theme: "Visuel",
+    source: "Retour WhatsApp",
+    image: "./client-review-beau-bon.jpeg",
+    featured: true
   },
   {
-    name: "Ines B.",
-    text: "Un rendu chic et soigné. La personnalisation et la livraison ont vraiment fait la différence.",
-    rating: 5
+    name: "Cliente fidelisee",
+    text: "Waw, je suis tres satisfaite. Le 01 inchallah on va encore commander.",
+    rating: 5,
+    theme: "Commande a nouveau",
+    source: "Retour WhatsApp",
+    image: "./client-review-recommande.jpeg",
+    featured: true
+  },
+  {
+    name: "Cliente famille",
+    text: "Le gateau etait super, bien prepare, bien doux, les invites ont aime. Cote bon seulement laisse.",
+    rating: 5,
+    theme: "Invites",
+    source: "Retour WhatsApp",
+    image: "./client-review-invites.jpeg"
+  },
+  {
+    name: "Cliente anniversaire enfants",
+    text: "Je suis pas tres gateaux mais j'ai beaucoup aime, et les enfants ont tous fini ce qu'on leur a servi.",
+    rating: 5,
+    theme: "Enfants",
+    source: "Retour WhatsApp",
+    image: "./client-review-magique.jpeg"
+  },
+  {
+    name: "Keren Vera",
+    text: "Je n'ai jamais mange un gateau aussi bon de ma vie je te jure.",
+    rating: 5,
+    theme: "Coup de coeur",
+    source: "Message client",
+    image: "./client-review-best.jpeg"
   }
 ];
 
 const gallery = [
-  "https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?q=80&w=900&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?q=80&w=900&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1517427294546-5aa121f68e8a?q=80&w=900&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1578985545062-69928b1d9587?q=80&w=900&auto=format&fit=crop"
+  {
+    image: "./client-cake-ariel.jpeg",
+    alt: "Gateau Ariel rose et bleu pour enfant",
+    title: "Theme Ariel"
+  },
+  {
+    image: "./client-cake-minnie.jpeg",
+    alt: "Gateau Minnie rose avec papillons et spheres",
+    title: "Minnie chic"
+  },
+  {
+    image: "./client-cake-birthday.jpeg",
+    alt: "Gateau Happy Birthday blanc et nude avec spheres dorees",
+    title: "Birthday elegant"
+  },
+  {
+    image: "./client-cake-purple.jpeg",
+    alt: "Gateau violet avec message romantique",
+    title: "Message personalise"
+  },
+  {
+    image: "./client-cake-mermaid.jpeg",
+    alt: "Gateau sirene colore avec decor marin",
+    title: "Sirene coloree"
+  },
+  {
+    image: "./client-cake-corporate.jpeg",
+    alt: "Gateau photo corporate avec message de remerciement",
+    title: "Corporate"
+  },
+  {
+    image: "./client-cake-slice.jpeg",
+    alt: "Part de gateau montrant la garniture fruits rouges et creme",
+    title: "Coupe interieure"
+  },
+  {
+    image: "./client-cake-inside.jpeg",
+    alt: "Gateau coupe montrant plusieurs couches et garniture",
+    title: "Texture"
+  }
 ];
 
 const cakeSizes = [
@@ -400,6 +468,9 @@ function renderAll() {
 }
 
 function renderStaticCollections() {
+  const featuredReviews = reviews.filter((review) => review.featured);
+  const moreReviews = reviews.filter((review) => !review.featured);
+
   elements.occasionGrid.innerHTML = occasions
     .map(
       (occasion) => `
@@ -414,24 +485,59 @@ function renderStaticCollections() {
     )
     .join("");
 
-  elements.reviewsGrid.innerHTML = reviews
-    .map(
-      (review) => `
-        <article class="review-card">
+  elements.reviewsGrid.innerHTML = `
+    <div class="reviews-featured">
+      ${featuredReviews
+        .map(
+          (review) => `
+        <article class="review-card review-card--featured">
+          <div class="review-card__media">
+            <img src="${review.image}" alt="${review.name}" loading="lazy" decoding="async" />
+          </div>
+          <div class="review-card__body">
+          <span class="review-theme">${review.theme}</span>
           <div class="review-stars">${"★".repeat(review.rating)}</div>
           <p>"${review.text}"</p>
+          <span class="review-source">${review.source}</span>
           <strong>${review.name}</strong>
+          </div>
         </article>
       `
-    )
-    .join("");
+        )
+        .join("")}
+    </div>
+    <div class="reviews-more">
+      <p class="reviews-more__title">Autres retours clients</p>
+      <div class="reviews-grid reviews-grid--secondary">
+        ${moreReviews
+          .map(
+      (review) => `
+        <article class="review-card">
+          <div class="review-card__media">
+            <img src="${review.image}" alt="${review.name}" loading="lazy" decoding="async" />
+          </div>
+          <div class="review-card__body">
+          <span class="review-theme">${review.theme}</span>
+          <div class="review-stars">${"★".repeat(review.rating)}</div>
+          <p>"${review.text}"</p>
+          <span class="review-source">${review.source}</span>
+          <strong>${review.name}</strong>
+          </div>
+        </article>
+      `
+          )
+          .join("")}
+      </div>
+    </div>
+  `;
 
   elements.galleryGrid.innerHTML = gallery
     .map(
-      (image) => `
-        <div class="gallery-item">
-          <img src="${image}" alt="Creation W.J. Cake & Dessert" loading="lazy" decoding="async" />
-        </div>
+      (item) => `
+        <figure class="gallery-item">
+          <img src="${item.image}" alt="${item.alt}" loading="lazy" decoding="async" />
+          <figcaption>${item.title}</figcaption>
+        </figure>
       `
     )
     .join("");
@@ -580,10 +686,7 @@ async function handleCustomCakeSubmit(event) {
   };
 
   if (!state.apiAvailable) {
-    elements.customCakeResult.textContent = formatJson({
-      preview: payload,
-      note: "API indisponible : devis W.J. Cake & Dessert préparé en mode vitrine."
-    });
+    elements.customCakeResult.innerHTML = formatQuotePreview(payload);
     return;
   }
 
@@ -592,9 +695,12 @@ async function handleCustomCakeSubmit(event) {
       method: "POST",
       body: JSON.stringify(payload)
     });
-    elements.customCakeResult.textContent = formatJson(result);
+    elements.customCakeResult.innerHTML = formatQuoteSuccess(result.item);
+    elements.customCakeForm.reset();
+    elements.customMessage.value = "";
+    renderSummary();
   } catch (error) {
-    elements.customCakeResult.textContent = formatJson({ error: error.message });
+    elements.customCakeResult.innerHTML = formatQuoteError(error);
   }
 }
 
@@ -656,9 +762,61 @@ function formatJson(value) {
   return JSON.stringify(value, null, 2);
 }
 
+function formatQuotePreview(payload) {
+  return `
+    <div class="quote-feedback quote-feedback--preview">
+      <strong>Mode vitrine</strong>
+      <p>Le devis n'a pas ete envoye car l'API est indisponible pour le moment.</p>
+      <ul class="quote-feedback__list">
+        <li><span>Nom</span><strong>${payload.customerName || "-"}</strong></li>
+        <li><span>Email</span><strong>${payload.email || "-"}</strong></li>
+        <li><span>Telephone</span><strong>${payload.phone || "-"}</strong></li>
+        <li><span>Date evenement</span><strong>${payload.eventDate || "-"}</strong></li>
+        <li><span>Portions</span><strong>${payload.servings || "-"}</strong></li>
+        <li><span>Style</span><strong>${payload.style || "-"}</strong></li>
+        <li><span>Parfum</span><strong>${payload.flavors.join(", ") || "-"}</strong></li>
+      </ul>
+    </div>
+  `;
+}
+
+function formatQuoteSuccess(item) {
+  const estimatedPrice = item?.estimatedPrice?.amount;
+  const currency = currencyLabel;
+  const disclaimer = item?.estimatedPrice?.disclaimer || "";
+  const formattedPrice =
+    typeof estimatedPrice === "number"
+      ? `${estimatedPrice} ${currency}`
+      : `En attente ${currency}`;
+
+  return `
+    <div class="quote-feedback quote-feedback--success">
+      <strong>Demande de devis envoyee avec succes.</strong>
+      <p>Nous avons bien recu votre demande et reviendrons vers vous apres validation.</p>
+      <ul class="quote-feedback__list">
+        <li><span>Reference</span><strong>${item?.id || "-"}</strong></li>
+        <li><span>Client</span><strong>${item?.customerName || "-"}</strong></li>
+        <li><span>Date evenement</span><strong>${item?.eventDate || "-"}</strong></li>
+        <li><span>Prix estime</span><strong>${formattedPrice}</strong></li>
+      </ul>
+      ${disclaimer ? `<p class="quote-feedback__note">${disclaimer}</p>` : ""}
+    </div>
+  `;
+}
+
+function formatQuoteError(error) {
+  return `
+    <div class="quote-feedback quote-feedback--error">
+      <strong>La demande de devis a echoue.</strong>
+      <p>${error.message || "Une erreur est survenue."}</p>
+    </div>
+  `;
+}
+
 function resolveBackendOrigin() {
   const configuredOrigin =
     window.WJ_API_ORIGIN ||
+    window.location.origin ||
     document.querySelector('meta[name="wj-api-origin"]')?.content?.trim() ||
     "https://wj-cake-dessert.onrender.com";
 
