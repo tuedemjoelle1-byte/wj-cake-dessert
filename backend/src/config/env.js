@@ -2,16 +2,21 @@ import { loadEnvFile } from "./load-env.js";
 
 loadEnvFile();
 
+const isTestRuntime =
+  process.env.NODE_ENV === "test" ||
+  process.argv.includes("--test") ||
+  process.argv.some((value) => value.endsWith(".test.js"));
+
 function readEnv(name, fallback = "") {
   const value = process.env[name];
   return typeof value === "string" && value.length > 0 ? value.trim() : fallback;
 }
 
 export const env = {
-  appEnv: readEnv("APP_ENV", "development"),
+  appEnv: isTestRuntime ? "test" : readEnv("APP_ENV", "development"),
   appUrl: readEnv("APP_URL", "http://localhost:4000"),
   port: Number(process.env.PORT || 4000),
-  dataProvider: readEnv("DATA_PROVIDER", "memory"),
+  dataProvider: isTestRuntime ? "memory" : readEnv("DATA_PROVIDER", "memory"),
   adminEmail: readEnv("ADMIN_EMAIL", "admin@wj.local"),
   adminPassword: readEnv("ADMIN_PASSWORD", "admin1234"),
   supabaseUrl: readEnv("SUPABASE_URL"),
@@ -22,5 +27,5 @@ export const env = {
 };
 
 export function isSupabaseConfigured() {
-  return Boolean(env.supabaseUrl && env.supabaseServiceRoleKey);
+  return !isTestRuntime && Boolean(env.supabaseUrl && env.supabaseServiceRoleKey);
 }

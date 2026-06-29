@@ -686,7 +686,7 @@ async function handleCustomCakeSubmit(event) {
   };
 
   if (!state.apiAvailable) {
-    elements.customCakeResult.innerHTML = formatQuotePreview(payload);
+    renderQuoteFeedback(createQuotePreviewFeedback(payload));
     return;
   }
 
@@ -695,12 +695,12 @@ async function handleCustomCakeSubmit(event) {
       method: "POST",
       body: JSON.stringify(payload)
     });
-    elements.customCakeResult.innerHTML = formatQuoteSuccess(result.item);
+    renderQuoteFeedback(createQuoteSuccessFeedback(result.item));
     elements.customCakeForm.reset();
     elements.customMessage.value = "";
     renderSummary();
   } catch (error) {
-    elements.customCakeResult.innerHTML = formatQuoteError(error);
+    renderQuoteFeedback(createQuoteErrorFeedback(error));
   }
 }
 
@@ -762,25 +762,24 @@ function formatJson(value) {
   return JSON.stringify(value, null, 2);
 }
 
-function formatQuotePreview(payload) {
-  return `
-    <div class="quote-feedback quote-feedback--preview">
-      <strong>Mode vitrine</strong>
-      <p>Le devis n'a pas ete envoye car l'API est indisponible pour le moment.</p>
-      <ul class="quote-feedback__list">
-        <li><span>Nom</span><strong>${payload.customerName || "-"}</strong></li>
-        <li><span>Email</span><strong>${payload.email || "-"}</strong></li>
-        <li><span>Telephone</span><strong>${payload.phone || "-"}</strong></li>
-        <li><span>Date evenement</span><strong>${payload.eventDate || "-"}</strong></li>
-        <li><span>Portions</span><strong>${payload.servings || "-"}</strong></li>
-        <li><span>Style</span><strong>${payload.style || "-"}</strong></li>
-        <li><span>Parfum</span><strong>${payload.flavors.join(", ") || "-"}</strong></li>
-      </ul>
-    </div>
-  `;
+function createQuotePreviewFeedback(payload) {
+  return createQuoteFeedback({
+    variant: "preview",
+    title: "Mode vitrine",
+    description: "Le devis n'a pas ete envoye car l'API est indisponible pour le moment.",
+    fields: [
+      ["Nom", payload.customerName],
+      ["Email", payload.email],
+      ["Telephone", payload.phone],
+      ["Date evenement", payload.eventDate],
+      ["Portions", payload.servings],
+      ["Style", payload.style],
+      ["Parfum", payload.flavors.join(", ")]
+    ]
+  });
 }
 
-function formatQuoteSuccess(item) {
+function createQuoteSuccessFeedback(item) {
   const estimatedPrice = item?.estimatedPrice?.amount;
   const currency = currencyLabel;
   const disclaimer = item?.estimatedPrice?.disclaimer || "";
@@ -789,28 +788,69 @@ function formatQuoteSuccess(item) {
       ? `${estimatedPrice} ${currency}`
       : `En attente ${currency}`;
 
-  return `
-    <div class="quote-feedback quote-feedback--success">
-      <strong>Demande de devis envoyee avec succes.</strong>
-      <p>Nous avons bien recu votre demande et reviendrons vers vous apres validation.</p>
-      <ul class="quote-feedback__list">
-        <li><span>Reference</span><strong>${item?.id || "-"}</strong></li>
-        <li><span>Client</span><strong>${item?.customerName || "-"}</strong></li>
-        <li><span>Date evenement</span><strong>${item?.eventDate || "-"}</strong></li>
-        <li><span>Prix estime</span><strong>${formattedPrice}</strong></li>
-      </ul>
-      ${disclaimer ? `<p class="quote-feedback__note">${disclaimer}</p>` : ""}
-    </div>
-  `;
+  return createQuoteFeedback({
+    variant: "success",
+    title: "Demande de devis envoyee avec succes.",
+    description: "Nous avons bien recu votre demande et reviendrons vers vous apres validation.",
+    fields: [
+      ["Reference", item?.id],
+      ["Client", item?.customerName],
+      ["Date evenement", item?.eventDate],
+      ["Prix estime", formattedPrice]
+    ],
+    note: disclaimer
+  });
 }
 
-function formatQuoteError(error) {
-  return `
-    <div class="quote-feedback quote-feedback--error">
-      <strong>La demande de devis a echoue.</strong>
-      <p>${error.message || "Une erreur est survenue."}</p>
-    </div>
-  `;
+function createQuoteErrorFeedback(error) {
+  return createQuoteFeedback({
+    variant: "error",
+    title: "La demande de devis a echoue.",
+    description: error.message || "Une erreur est survenue."
+  });
+}
+
+function renderQuoteFeedback(node) {
+  elements.customCakeResult.replaceChildren(node);
+}
+
+function createQuoteFeedback({ variant, title, description, fields = [], note = "" }) {
+  const wrapper = document.createElement("div");
+  wrapper.className = `quote-feedback quote-feedback--${variant}`;
+
+  const heading = document.createElement("strong");
+  heading.textContent = title;
+  wrapper.append(heading);
+
+  const descriptionNode = document.createElement("p");
+  descriptionNode.textContent = description;
+  wrapper.append(descriptionNode);
+
+  if (fields.length > 0) {
+    const list = document.createElement("ul");
+    list.className = "quote-feedback__list";
+
+    for (const [label, value] of fields) {
+      const item = document.createElement("li");
+      const labelNode = document.createElement("span");
+      labelNode.textContent = label;
+      const valueNode = document.createElement("strong");
+      valueNode.textContent = value ? String(value) : "-";
+      item.append(labelNode, valueNode);
+      list.append(item);
+    }
+
+    wrapper.append(list);
+  }
+
+  if (note) {
+    const noteNode = document.createElement("p");
+    noteNode.className = "quote-feedback__note";
+    noteNode.textContent = note;
+    wrapper.append(noteNode);
+  }
+
+  return wrapper;
 }
 
 function resolveBackendOrigin() {
