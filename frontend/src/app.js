@@ -146,6 +146,46 @@ const reviews = [
     theme: "Coup de coeur",
     source: "Message client",
     image: "./client-review-best.jpeg"
+  },
+  {
+    name: "Cliente X",
+    text: "Merci vraiment, c'etait bon.",
+    date: "28/06/2026"
+  },
+  {
+    name: "Cliente Chateau d'Eau",
+    text: "Facon tu as fait le gateau la, wow.",
+    date: "16/11/2025"
+  },
+  {
+    name: "Cliente Chateau d'Eau",
+    text: "Merci oo, le gateau etait super bon comme d'hab.",
+    date: "01/02/2026"
+  },
+  {
+    name: "Cliente Chateau d'Eau",
+    text: "Merci encore oo, comme d'hab le gateau etait excellent.",
+    date: "06/06/2026"
+  },
+  {
+    name: "Keren Vera",
+    text: "Toupaka et Emmanuel ont failli se bagarrer pour le gateau hier soir. Non, c'etait bon je te jure. J'ai pris une bouchee mais je ne peux pas oublier ce gateau.",
+    date: "26/03/2026"
+  },
+  {
+    name: "Franckette Amour",
+    text: "Le gateau etait super, bien prepare, bien doux, les invites ont aime. Mais c'etait trop petit, ca ne leur a pas suffi. En tout cas, cote gout, c'est valide, moi qui ne mange pas beaucoup de gateau, j'ai mange hier. Merci !",
+    date: "12/05/2026"
+  },
+  {
+    name: "Cliente Violet",
+    text: "Trop bon, tout le monde a aime, je te jure.",
+    date: "21/06/2026"
+  },
+  {
+    name: "Cliente Chateau d'Eau",
+    text: "Bonjour ma cherie, merci beaucoup, c'etait tres beau et bon.",
+    date: "26/12/2026"
   }
 ];
 
@@ -488,8 +528,8 @@ function renderStaticCollections() {
   elements.reviewsGrid.innerHTML = `
     <div class="reviews-featured">
       ${featuredReviews
-        .map(
-          (review) => `
+      .map(
+        (review) => `
         <article class="review-card review-card--featured">
           <div class="review-card__media">
             <img src="${review.image}" alt="${review.name}" loading="lazy" decoding="async" />
@@ -503,15 +543,16 @@ function renderStaticCollections() {
           </div>
         </article>
       `
-        )
-        .join("")}
+      )
+      .join("")}
     </div>
     <div class="reviews-more">
       <p class="reviews-more__title">Autres retours clients</p>
       <div class="reviews-grid reviews-grid--secondary">
         ${moreReviews
-          .map(
-      (review) => `
+      .map((review) =>
+        review.image
+          ? `
         <article class="review-card">
           <div class="review-card__media">
             <img src="${review.image}" alt="${review.name}" loading="lazy" decoding="async" />
@@ -525,8 +566,17 @@ function renderStaticCollections() {
           </div>
         </article>
       `
-          )
-          .join("")}
+          : `
+        <article class="review-card review-card--text">
+          <div class="review-card__body">
+          <p>"${review.text}"</p>
+          <span class="review-source">${review.date}</span>
+          <strong>${review.name}</strong>
+          </div>
+        </article>
+      `
+      )
+      .join("")}
       </div>
     </div>
   `;
