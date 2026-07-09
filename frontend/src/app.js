@@ -1,4 +1,6 @@
-﻿const apiBase = "/api/v1";
+﻿const WHATSAPP_NUMBER = "212630977195";
+
+const apiBase = "/api/v1";
 
 const currencyLabel = "DHS";
 
