@@ -1,5 +1,18 @@
 ﻿const WHATSAPP_NUMBER = "212630977195";
 
+function buildWhatsAppLink(message) {
+  const base = `https://wa.me/${WHATSAPP_NUMBER}`;
+  return message ? `${base}?text=${encodeURIComponent(message)}` : base;
+}
+
+function setupWhatsAppLinks() {
+  document.querySelectorAll("[data-whatsapp-message]").forEach((link) => {
+    link.href = buildWhatsAppLink(link.dataset.whatsappMessage);
+    link.target = "_blank";
+    link.rel = "noopener";
+  });
+}
+
 const apiBase = "/api/v1";
 
 const currencyLabel = "DHS";
@@ -307,6 +320,7 @@ async function boot() {
   bindEvents();
   setupBrandCakeLogo();
   setupMotion();
+  setupWhatsAppLinks();
   renderStaticCollections();
   renderOptionGroups();
   renderAll();
