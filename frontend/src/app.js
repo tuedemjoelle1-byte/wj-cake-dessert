@@ -751,6 +751,28 @@ async function handleCustomCakeSubmit(event) {
     notes: String(formData.get("notes") || "").trim()
   };
 
+  const price = calculateCakePrice(
+    state.selectedSize.extra,
+    state.selectedFlavor.extra,
+    state.selectedFinish.extra
+  );
+
+  const whatsappMessage = [
+    "Bonjour, je souhaite demander un devis pour un gateau personnalise.",
+    `Nom : ${payload.customerName || "-"}`,
+    `Taille : ${state.selectedSize.label} (${payload.servings} parts)`,
+    `Parfum : ${state.selectedFlavor.label}`,
+    `Finition : ${state.selectedFinish.label}`,
+    payload.messageOnCake ? `Message sur le gateau : ${payload.messageOnCake}` : null,
+    payload.eventDate ? `Date de l'evenement : ${payload.eventDate}` : null,
+    payload.notes ? `Notes : ${payload.notes}` : null,
+    `Prix estime : ${price} ${currencyLabel}`
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  window.open(buildWhatsAppLink(whatsappMessage), "_blank", "noopener");
+
   if (!state.apiAvailable) {
     renderQuoteFeedback(createQuotePreviewFeedback(payload));
     return;
