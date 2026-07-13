@@ -1,4 +1,4 @@
-﻿const WHATSAPP_NUMBER = "212630977195";
+﻿const WHATSAPP_NUMBER = "212782404114";
 
 function buildWhatsAppLink(message) {
   const base = `https://wa.me/${WHATSAPP_NUMBER}`;
@@ -638,7 +638,6 @@ function renderOptions(container, options, selected, onSelect) {
     button.className = `option-button ${selected.label === option.label ? "is-selected" : ""}`;
     button.innerHTML = `
       <strong>${option.label}</strong>
-      <span>+${option.extra} ${currencyLabel}</span>
     `;
     button.addEventListener("click", () => onSelect(option));
     container.append(button);
@@ -751,12 +750,6 @@ async function handleCustomCakeSubmit(event) {
     notes: String(formData.get("notes") || "").trim()
   };
 
-  const price = calculateCakePrice(
-    state.selectedSize.extra,
-    state.selectedFlavor.extra,
-    state.selectedFinish.extra
-  );
-
   const whatsappMessage = [
     "Bonjour, je souhaite demander un devis pour un gateau personnalise.",
     `Nom : ${payload.customerName || "-"}`,
@@ -765,8 +758,7 @@ async function handleCustomCakeSubmit(event) {
     `Finition : ${state.selectedFinish.label}`,
     payload.messageOnCake ? `Message sur le gateau : ${payload.messageOnCake}` : null,
     payload.eventDate ? `Date de l'evenement : ${payload.eventDate}` : null,
-    payload.notes ? `Notes : ${payload.notes}` : null,
-    `Prix estime : ${price} ${currencyLabel}`
+    payload.notes ? `Notes : ${payload.notes}` : null
   ]
     .filter(Boolean)
     .join("\n");
