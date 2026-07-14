@@ -699,11 +699,6 @@ function renderSummary() {
   elements.summaryFlavor.textContent = state.selectedFlavor.label;
   elements.summaryFinish.textContent = state.selectedFinish.label;
   elements.summaryMessage.textContent = `"${elements.customMessage.value || "Message personnalise"}"`;
-  elements.cakePrice.textContent = `${calculateCakePrice(
-    state.selectedSize.extra,
-    state.selectedFlavor.extra,
-    state.selectedFinish.extra
-  )} ${currencyLabel}`;
 }
 
 async function handleAddToCart(event) {
