@@ -447,6 +447,19 @@ export const supabaseRepository = {
     return rows[0] ? toPublicProduct(rows[0]) : null;
   },
 
+  async getProductById(id) {
+    const rows = await supabaseRequest(`/rest/v1/products?id=eq.${encode(id)}&select=*`);
+    return rows[0] ? toPublicProduct(rows[0]) : null;
+  },
+
+  async updateProductPrice(id, price) {
+    const rows = await supabaseRequest(`/rest/v1/products?id=eq.${encode(id)}`, {
+      method: "PATCH",
+      body: JSON.stringify({ base_price: price })
+    });
+    return rows[0] ? toPublicProduct(rows[0]) : null;
+  },
+
   normalizeCartItem,
 
   async createCart(input) {

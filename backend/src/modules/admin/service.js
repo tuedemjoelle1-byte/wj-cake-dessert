@@ -96,3 +96,42 @@ export async function updateAdminQuoteRequestStatus(id, status) {
 export function listAdminPayments(filters = {}) {
   return repository.listAdminPayments(filters);
 }
+
+export function listAdminProducts() {
+  return repository.listProducts();
+}
+
+export async function updateAdminProductPrice(id, price) {
+  const numericPrice = Number(price);
+
+  if (!Number.isFinite(numericPrice) || numericPrice < 0) {
+    const error = new Error("Le prix doit etre un nombre positif.");
+    error.status = 400;
+    error.code = "PRIX_INVALIDE";
+    throw error;
+  }
+
+  const current = await repository.getProductById(id);
+  if (!current) {
+    const error = new Error("Produit introuvable.");
+    error.status = 404;
+    error.code = "PRODUIT_INTROUVABLE";
+    throw error;
+  }
+
+  const updated = await repository.updateProductPrice(id, numericPrice);
+
+  await audit({
+    action: "admin.product.price.update",
+    actorType: "admin",
+    actorId: "dashboard",
+    targetType: "product",
+    targetId: id,
+    metadata: {
+      previousPrice: current.basePrice,
+      nextPrice: numericPrice
+    }
+  });
+
+  return updated;
+}

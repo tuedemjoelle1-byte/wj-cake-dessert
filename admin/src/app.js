@@ -27,6 +27,8 @@ const elements = {
   quotesCount: document.querySelector("#quotes-count"),
   paymentsTable: document.querySelector("#payments-table"),
   paymentsCount: document.querySelector("#payments-count"),
+  productsPriceTable: document.querySelector("#products-price-table"),
+  productsPriceCount: document.querySelector("#products-price-count"),
   systemState: document.querySelector("#system-state"),
   ordersFilters: document.querySelector("#orders-filters"),
   filterEmail: document.querySelector("#filter-email"),
@@ -607,7 +609,7 @@ async function restoreAdminSession() {
 
 async function loadAdminApp() {
   elements.systemState.textContent = "Chargement du tableau de bord...";
-  await Promise.all([loadDashboard(), loadOrders(), loadQuotes(), loadPayments()]);
+  await Promise.all([loadDashboard(), loadOrders(), loadQuotes(), loadPayments(), loadProductsPrices()]);
   startAdminPolling();
   elements.apiStatus.textContent = "Connecté au backend W.J. Cake & Dessert";
   elements.systemState.textContent = "Données synchronisées";
@@ -696,6 +698,103 @@ async function loadPayments() {
   renderPaymentsPagination(payload.meta);
   syncNotifications();
   return payload;
+}
+
+async function loadProductsPrices() {
+  const payload = await fetchJson("/api/v1/admin/products");
+  const bestSellers = (payload.items || []).filter((product) => product.isBestSeller);
+  renderProductsPrices(bestSellers.length > 0 ? bestSellers : payload.items || []);
+  return payload;
+}
+
+function renderProductsPrices(products) {
+  elements.productsPriceCount.textContent = `${products.length} élément${products.length > 1 ? "s" : ""}`;
+
+  if (products.length === 0) {
+    elements.productsPriceTable.innerHTML = `
+      <div class="empty-state">
+        <p>Aucun produit à afficher.</p>
+      </div>
+    `;
+    return;
+  }
+
+  elements.productsPriceTable.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>Produit</th>
+          <th>Prix actuel</th>
+          <th>Nouveau prix</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        ${products
+          .map(
+            (product) => `
+              <tr>
+                <td>${product.name}</td>
+                <td>${currencyFormatter.format(product.basePrice)} ${product.currency || "MAD"}</td>
+                <td>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    class="product-price-input"
+                    data-product-id="${product.id}"
+                    value="${product.basePrice}"
+                  />
+                </td>
+                <td>
+                  <button class="secondary-button product-price-save" data-product-id="${product.id}" type="button">
+                    Enregistrer
+                  </button>
+                </td>
+              </tr>
+            `
+          )
+          .join("")}
+      </tbody>
+    </table>
+  `;
+
+  for (const button of document.querySelectorAll(".product-price-save")) {
+    button.addEventListener("click", () => {
+      void handleProductPriceSave(button.dataset.productId);
+    });
+  }
+}
+
+async function handleProductPriceSave(productId) {
+  const input = document.querySelector(`.product-price-input[data-product-id="${productId}"]`);
+  const button = document.querySelector(`.product-price-save[data-product-id="${productId}"]`);
+  if (!input || !button) {
+    return;
+  }
+
+  const price = Number(input.value);
+  if (!Number.isFinite(price) || price < 0) {
+    window.alert("Merci d'entrer un prix valide.");
+    return;
+  }
+
+  const originalLabel = button.textContent;
+  button.disabled = true;
+  button.textContent = "Enregistrement...";
+
+  try {
+    await fetchJson(`/api/v1/admin/products/${encodeURIComponent(productId)}/price`, {
+      method: "PATCH",
+      body: JSON.stringify({ price })
+    });
+    button.textContent = "Enregistré ✓";
+    await loadProductsPrices();
+  } catch (error) {
+    button.textContent = originalLabel;
+    button.disabled = false;
+    window.alert(`Erreur : ${error.message}`);
+  }
 }
 
 function renderPagination(meta = {}) {

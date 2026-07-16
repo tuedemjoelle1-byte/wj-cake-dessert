@@ -192,6 +192,19 @@ export const memoryRepository = {
     return clone(memoryDb.products.find((product) => product.slug === slug) || null);
   },
 
+  async getProductById(id) {
+    return clone(memoryDb.products.find((product) => product.id === id) || null);
+  },
+
+  async updateProductPrice(id, price) {
+    const product = memoryDb.products.find((item) => item.id === id);
+    if (!product) {
+      return null;
+    }
+    product.basePrice = price;
+    return clone(product);
+  },
+
   async createCart(input) {
     const cart = {
       id: createPublicId("cart"),

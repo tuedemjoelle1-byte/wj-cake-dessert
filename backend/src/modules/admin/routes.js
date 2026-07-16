@@ -6,8 +6,10 @@ import {
   getDashboard,
   listAdminOrders,
   listAdminPayments,
+  listAdminProducts,
   listAdminQuoteRequests,
   updateAdminOrderStatus,
+  updateAdminProductPrice,
   updateAdminQuoteRequestStatus
 } from "./service.js";
 import { getCurrentAdmin } from "./auth-service.js";
@@ -131,6 +133,24 @@ export function registerAdminRoutes(router) {
         })
       )
       .then((result) => ok(res, result))
+      .catch((error) =>
+        fail(res, error.status || 500, error.code || "INTERNAL_ERROR", error.message, error.details)
+      );
+  });
+
+  router.get("/api/v1/admin/products", ({ req, res }) => {
+    return Promise.resolve(requireAdmin(req))
+      .then(() => listAdminProducts())
+      .then((items) => ok(res, { items }))
+      .catch((error) =>
+        fail(res, error.status || 500, error.code || "INTERNAL_ERROR", error.message, error.details)
+      );
+  });
+
+  router.patch("/api/v1/admin/products/:id/price", ({ req, res, params, body }) => {
+    return Promise.resolve(requireAdmin(req))
+      .then(() => updateAdminProductPrice(params.id, body.price))
+      .then((item) => ok(res, { item }))
       .catch((error) =>
         fail(res, error.status || 500, error.code || "INTERNAL_ERROR", error.message, error.details)
       );

@@ -61,7 +61,7 @@ export const memoryDb = {
       flavors: ["Vanille", "Chocolat", "Caramel"],
       servings: [6, 12],
       minNoticeHours: 24,
-      isBestSeller: false
+      isBestSeller: true
     }
   ],
   carts: [],
