@@ -24,9 +24,18 @@ function createResilientRepository() {
         try {
           return await value.apply(target, args);
         } catch (error) {
+          console.error(
+            `[repository] Erreur Supabase sur "${String(property)}":`,
+            error.code || error.message,
+            error.cause ? `(cause: ${error.cause.code || error.cause.message})` : ""
+          );
+
           if (!shouldFallbackToMemory(error)) {
+            console.error(`[repository] Erreur non éligible au fallback mémoire, propagation de l'erreur.`);
             throw error;
           }
+
+          console.warn(`[repository] FALLBACK MEMOIRE utilisé pour "${String(property)}".`);
 
           const fallback = memoryRepository[property];
           if (typeof fallback !== "function") {
@@ -43,9 +52,14 @@ function createResilientRepository() {
 const resilientSupabaseRepository = createResilientRepository();
 
 export function getRepository() {
+  console.log(
+    `[repository] dataProvider="${env.dataProvider}" supabaseConfigured=${isSupabaseConfigured()}`
+  );
+
   if (env.dataProvider === "supabase" && isSupabaseConfigured()) {
     return resilientSupabaseRepository;
   }
 
+  console.warn("[repository] Utilisation du repository MEMOIRE (pas Supabase).");
   return memoryRepository;
 }
