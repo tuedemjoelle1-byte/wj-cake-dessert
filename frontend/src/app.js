@@ -931,9 +931,8 @@ function createQuoteFeedback({ variant, title, description, fields = [], note = 
 function resolveBackendOrigin() {
   const configuredOrigin =
     window.WJ_API_ORIGIN ||
-    window.location.origin ||
     document.querySelector('meta[name="wj-api-origin"]')?.content?.trim() ||
-    "https://wj-cake-dessert.onrender.com";
+    "https://wj-cake-dessert-mqiw.onrender.com";
 
   return configuredOrigin.replace(/\/+$/, "");
 }
