@@ -243,6 +243,7 @@ function renderOrders(orders) {
           <th>N° commande</th>
           <th>Client</th>
           <th>Produit</th>
+          <th>Source</th>
           <th>Montant</th>
           <th>Statut</th>
           <th>Date</th>
@@ -260,6 +261,7 @@ function renderOrders(orders) {
                 </td>
                 <td>${order.customer?.name || order.customer?.email || "Client inconnu"}</td>
                 <td>${order.items?.[0]?.name || "Commande personnalisée"}</td>
+                <td><span class="status-chip is-soft">${order.source === "whatsapp" ? "WhatsApp" : "Site"}</span></td>
                 <td>${currencyFormatter.format(order.total)} ${order.currency}</td>
                 <td><span class="status-chip">${translateStatus(order.status)}</span></td>
                 <td>${formatDate(order.createdAt)}</td>

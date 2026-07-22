@@ -82,6 +82,8 @@ function toAdminOrderDetail(order) {
       total: 0,
       currency: "DZD"
     },
+    source: order.source || "site",
+    notes: order.notes || null,
     createdAt: order.createdAt
   };
 }

@@ -10,6 +10,28 @@ function setupWhatsAppLinks() {
     link.href = buildWhatsAppLink(link.dataset.whatsappMessage);
     link.target = "_blank";
     link.rel = "noopener";
+    link.addEventListener("click", handleWhatsAppButtonClick);
+  });
+}
+
+function handleWhatsAppButtonClick(event) {
+  const link = event.currentTarget;
+  const message = link.dataset.whatsappMessage || "";
+  const label = link.textContent.trim();
+
+  if (!state.apiAvailable) {
+    return;
+  }
+
+  fetchJson(`${apiBase}/orders`, {
+    method: "POST",
+    body: JSON.stringify({
+      source: "whatsapp",
+      label,
+      notes: message
+    })
+  }).catch((error) => {
+    console.warn("Enregistrement de la commande WhatsApp impossible :", error.message);
   });
 }
 

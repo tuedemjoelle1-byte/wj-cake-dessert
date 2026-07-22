@@ -93,6 +93,8 @@ function toPublicOrder(row) {
     paymentStatus: row.payment_status,
     items: row.items || [],
     totals: row.totals || null,
+    source: row.source || "site",
+    notes: row.notes || null,
     createdAt: row.created_at
   };
 }
@@ -186,6 +188,8 @@ function toAdminOrderDetail(order) {
       total: 0,
       currency: "DZD"
     },
+    source: order.source || "site",
+    notes: order.notes || null,
     createdAt: order.createdAt
   };
 }
@@ -693,6 +697,8 @@ export const supabaseRepository = {
           payment_status: payload.paymentStatus,
           items: payload.items,
           totals: payload.totals,
+          source: payload.source || "site",
+          notes: payload.notes || null,
           created_at: payload.createdAt
         }
       ])
